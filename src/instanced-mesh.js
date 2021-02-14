@@ -109,6 +109,11 @@ AFRAME.registerComponent('instanced-mesh', {
     }
     this.members = ii;
 
+    // We don't want to use frustrum culling, as the object's position & shape
+    // don't accurately reflect all the members of the Instanced Mesh, so
+    // we'd be prone to objects disappearing even when in view.
+    this.instancedMesh.frustumCulled = false;
+
     // Copied from A-Frame instancedmesh.  I don't understand why this is
     // added as a child of Object3D...
     // rather than e.g. this.el.setObject3D('mesh', this.instancedMesh);
@@ -120,7 +125,8 @@ AFRAME.registerComponent('instanced-mesh', {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same Frame of Reference for now..
 
-    memberID = event.detail.member.id;
+    const memberID = event.detail.member.id;
+    var index;
 
     // First, choose the index for the new member.
     // 2 possibilities...
@@ -128,7 +134,9 @@ AFRAME.registerComponent('instanced-mesh', {
     if (this.membersToRemove.length > 0) {
 
       // Grab the index, and remove this index from the list of pending deletions.
-      index = this.membersToRemove[0];
+      const id = this.membersToRemove[0];
+      index = this.orderedMembersList.findIndex(x => (x == id));
+
       this.membersToRemove.splice(0, 1);
       this.orderedMembersList[index] = memberID;
     }
@@ -136,15 +144,15 @@ AFRAME.registerComponent('instanced-mesh', {
     //    a new member.
     else
     {
+      if (this.members > this.capacity) {
+        // Don't go over capacity.
+        console.warn(`Member not added to mesh ${this.el.id}.  Exceeded configured capacity of ${this.capacity}`)
+        return;
+      }
+
       index = this.members;
       this.members++;
       this.orderedMembersList.push(memberID);
-
-      if (this.members > this.capacity) {
-        // Don't go over capacity.
-        console.warn(`Member not added to mesh ${this.el.id}.  Exceeded configured capacity of ${tis.capacity}`)
-        return;
-      }
     }
 
     // Pull object3D details to construct matrix.  Note that the
@@ -159,9 +167,9 @@ AFRAME.registerComponent('instanced-mesh', {
     this.instancedMesh.setMatrixAt(index, this.matrix);
 
     // Diags: Dump full matrix of x/y positions:
-    for (var jj = 0; jj < this.members; jj++) {
+    //for (var jj = 0; jj < this.members; jj++) {
       //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
-    }
+    //}
 
     this.instancedMesh.count = this.members;
     this.instancedMesh.instanceMatrix.needsUpdate = true;
@@ -233,11 +241,11 @@ AFRAME.registerComponent('instanced-mesh', {
       this.membersToRemove = [];
 
       // Diags: Dump full matrix of x/y positions:
-      for (var jj = 0; jj < this.members; jj++) {
+      //for (var jj = 0; jj < this.members; jj++) {
         //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
-      }
+      //}
 
-      //console.log("Removals done");
+      console.log("Removals done");
     }
   }
 
@@ -255,34 +263,74 @@ AFRAME.registerComponent('instanced-mesh-member', {
       object3DUpdated: this.object3DUpdated.bind(this),
     };
     this.attachEventListeners();
+
+    // Some state we track, to help make the right updates to the Instanced Mesh.
+    this.visible = this.el.object3D.visible;
+    this.matrix = this.el.object3D.matrix.clone();
+  },
+
+  update: function () {
+    // look for changes to be mirrored to the Mesh.
+    if (this.visible) {
+      // Object was previously visible.  But might not be any more...
+      if (!this.el.object3D.visible) {
+        console.log("Removed (v):" + this.el.id);
+        this.data.mesh.emit('memberRemoved', {member: this.el});
+        this.visible = false;
+      }
+      else {
+        // Object was & is visible.  Check for other updates that need to be
+        // mirrored to the Mesh.
+        // Basically just the localMatrix at this stage...
+        // (we'll need to revisit when we support multiple frames of reference...)
+        if (!this.matrix.equals(this.el.object3D.matrix)) {
+          // there's been some change to position, orientation or scale, so
+          // mirror it.
+          console.log("Modified:" + this.el.id);
+          this.data.mesh.emit('memberModified', {'member': this.el});
+          this.matrix.copy(this.el.object3D.matrix);
+        }
+      }
+    }
+    else {
+      // Object not previously visible.  But might have just become...
+      if (this.el.object3D.visible) {
+        console.log("Added (v):" + this.el.id);
+        this.data.mesh.emit('memberAdded', {member: this.el});
+        this.matrix.copy(this.el.object3D.matrix);
+        this.visible = true;
+        this.added = true;
+      }
+    }
   },
 
   play: function () {
     // We hold off adding the member to the mesh until this point
     // because prior to this (e.g. on init or update), the scale properties of
     // object3D don't seem to have been set to the correct values.
-    if (!this.added) {
+    if ((!this.added) &&
+        (this.el.object3D.visible)) {
       //console.log(`Position: ${this.el.object3D.position.x} ${this.el.object3D.position.y}`)
+      console.log("Added:" + this.el.id);
       this.data.mesh.emit('memberAdded', {member: this.el});
+      this.matrix.copy(this.el.object3D.matrix);
       this.added = true;
     }
   },
 
   attachEventListeners: function() {
-    this.el.addEventListener('memberRegistered', this.listeners.memberRegistered, false);
     this.el.addEventListener('object3DUpdated', this.listeners.object3DUpdated, false);
-    this.el.addEventListener('memberRemoved', this.listeners.memberRemoved, false);
   },
 
   remove: function() {
-
+    console.log("Removed:" + this.el.id);
     this.data.mesh.emit("memberRemoved", {'member': this.el});
   },
 
   // This should be invoked whenever the Object3D is updated.
   // Mirror any changes across to the parent instance mesh.
   object3DUpdated: function(event) {
-    this.data.mesh.emit('memberModified', {'member': this.el});
+    this.update();
   }
 
 });
