@@ -8,9 +8,9 @@ AFRAME.registerComponent('instanced-mesh', {
     this.capacity = this.data.capacity;
     this.members = 0;
     this.listeners = {
-      childAdded: this.childAdded.bind(this),
-      childModified: this.childModified.bind(this),
-      childRemoved: this.childRemoved.bind(this),
+      memberAdded: this.memberAdded.bind(this),
+      memberModified: this.memberModified.bind(this),
+      memberRemoved: this.memberRemoved.bind(this),
     };
     this.attachEventListeners();
 
@@ -19,9 +19,9 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   attachEventListeners: function() {
-    this.el.addEventListener('childAdded', this.listeners.childAdded, false);
-    this.el.addEventListener('childModified', this.listeners.childModified, false);
-    this.el.addEventListener('childRemoved', this.listeners.childRemoved, false);
+    this.el.addEventListener('memberAdded', this.listeners.memberAdded, false);
+    this.el.addEventListener('memberModified', this.listeners.memberModified, false);
+    this.el.addEventListener('memberRemoved', this.listeners.memberRemoved, false);
   },
 
   update: function () {
@@ -93,32 +93,32 @@ AFRAME.registerComponent('instanced-mesh', {
     this.el.object3D.remove(mesh);
   },
 
-  childAdded: function(event) {
+  memberAdded: function(event) {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
     index = this.members;
 
 
-    var position = event.detail.child.object3D.position
-    var quaternion = event.detail.child.object3D.quaternion
-    var scale = event.detail.child.object3D.scale
+    var position = event.detail.member.object3D.position
+    var quaternion = event.detail.member.object3D.quaternion
+    var scale = event.detail.member.object3D.scale
     this.matrix.compose( position, quaternion, scale );
 
     this.instancedMesh.setMatrixAt(index, this.matrix);
-    event.detail.child.emit("childRegistered", {index: index});
+    event.detail.member.emit("memberRegistered", {index: index});
     this.members++;
     this.instancedMesh.count = this.members;
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   },
 
-  childModified: function(event) {
+  memberModified: function(event) {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
-    this.instancedMesh.setMatrixAt(event.detail.index, event.detail.child.object3D.matrix);
+    this.instancedMesh.setMatrixAt(event.detail.index, event.detail.member.object3D.matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   },
 
-  childRemoved: function(event) {
+  memberRemoved: function(event) {
 
     // Shuffle down all later indices, and reduce the overall count of elements.
     // Underlying this is a single linear array of 16 x this.members.
@@ -142,34 +142,34 @@ AFRAME.registerComponent('instanced-mesh-member', {
   init: function() {
     this.index = -1;
     this.listeners = {
-      childRegistered: this.childRegistered.bind(this),
+      memberRegistered: this.memberRegistered.bind(this),
       object3DUpdated: this.object3DUpdated.bind(this),
     };
     this.attachEventListeners();
-    this.data.mesh.emit('childAdded', {child: this.el});
+    this.data.mesh.emit('memberAdded', {member: this.el});
 
   },
 
   attachEventListeners: function() {
-    this.el.addEventListener('childRegistered', this.listeners.childRegistered, false);
+    this.el.addEventListener('memberRegistered', this.listeners.memberRegistered, false);
     this.el.addEventListener('object3DUpdated', this.listeners.object3DUpdated, false);
-    this.el.addEventListener('childRemoved', this.listeners.childRemoved, false);
+    this.el.addEventListener('memberRemoved', this.listeners.memberRemoved, false);
   },
 
   remove: function() {
-    this.data.mesh.emit("childRemoved", {'index': this.index});
+    this.data.mesh.emit("memberRemoved", {'index': this.index});
   },
 
   // This should be invoked whenever the Object3D is updated.
   // Mirror any changes across to the parent instance mesh.
   object3DUpdated: function(event) {
-    this.data.mesh.emit('childModified', {'index': this.index,
-                                          'child': this.el});
+    this.data.mesh.emit('memberModified', {'index': this.index,
+                                          'member': this.el});
   },
 
   // Just store the index, so we can pass it back on
   // modification or deletion
-  childRegistered: function(event) {
+  memberRegistered: function(event) {
     this.index = event.detail.index;
   }
 
