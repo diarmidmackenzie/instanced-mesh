@@ -159,7 +159,9 @@ AFRAME.registerComponent('instanced-mesh', {
   memberModified: function(event) {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
-    this.instancedMesh.setMatrixAt(event.detail.index, event.detail.member.object3D.matrix);
+
+    const index = this.orderedMembersList.findIndex(x => (x == event.detail.member.id));
+    this.instancedMesh.setMatrixAt(index, event.detail.member.object3D.matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   },
 
