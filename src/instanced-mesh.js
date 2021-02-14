@@ -97,8 +97,6 @@ AFRAME.registerComponent('instanced-mesh', {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
     index = this.members;
-
-
     var position = event.detail.member.object3D.position
     var quaternion = event.detail.member.object3D.quaternion
     var scale = event.detail.member.object3D.scale
@@ -141,13 +139,22 @@ AFRAME.registerComponent('instanced-mesh-member', {
 
   init: function() {
     this.index = -1;
+    this.added = false;
     this.listeners = {
       memberRegistered: this.memberRegistered.bind(this),
       object3DUpdated: this.object3DUpdated.bind(this),
     };
     this.attachEventListeners();
-    this.data.mesh.emit('memberAdded', {member: this.el});
+  },
 
+  play: function () {
+    // We hold off adding the member to the mesh until this point
+    // becauase prior to this (e.g. on init or update), the scale properties of
+    // object3D don't seem to have been set to the correct values.    
+    if (!this.added) {
+      this.data.mesh.emit('memberAdded', {member: this.el});
+      this.added = true;
+    }
   },
 
   attachEventListeners: function() {

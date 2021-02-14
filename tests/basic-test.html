@@ -8,8 +8,7 @@
   <body>
     <a-scene stats renderer="colorManagement:true">
 
-      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-entity>
-></a-mixin>
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
 
     <a-entity id="rig" movement-controls>
       <a-entity id="camera" camera position="0 1.6 0" look-controls>
@@ -21,9 +20,8 @@
        value="This should show an array of 5 columns, 3 rows.
               Yellow blocks with black edging."></a-text>
     <a-entity id="mesh1"
-              framed-block="facecolor: yellow; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+              framed-block="facecolor: yellow; framecolor: black"
               position = "0 0 0"
-              scale = "0.5 0.5 0.5"
               instanced-mesh="capacity:15"></a-entity>
     <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block1" position = "-1 0 -6" mixin="shape1"></a-entity>

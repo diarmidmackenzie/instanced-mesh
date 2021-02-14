@@ -1,5 +1,6 @@
 <html>
   <head>
+    <!-- Tests use of the scale attribute, vs. direct control of scale via geometry-->
     <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <script src="../src/instanced-mesh.js"></script>
@@ -7,7 +8,6 @@
   </head>
   <body>
     <a-scene stats renderer="colorManagement:true">
-
 
     <a-entity id="rig" movement-controls>
       <a-entity id="camera" camera position="0 1.6 0" look-controls>
@@ -17,22 +17,30 @@
     <!-- wall of blocks-->
     <a-text position = "-5 4 -6" color ="black"
        value="This should show an array of 5 columns, 3 rows.
-              Yellow, green and blue blocks  with black edging."></a-text>
+              Yellow, green and blue blocks  with black edging.
+              All should be the same size."></a-text>
+    <!-- 1st mesh explicitly sets the block height/width/depth to 1 (default for geometry is 2)-->
     <a-entity id="mesh1"
               framed-block="facecolor: yellow; framecolor: black; height:1;width:1;depth:1;frame:0.1"
               position = "0 0 0"
               instanced-mesh="capacity:5"></a-entity>
+    <!-- No scaling here - scaling done via the mixin instead.-->
+    <!-- Note that scaling on the mesh has a very different (undesirable) effect:
+         - No effect on the size of the geometry itself.
+         - But it does affect the intepretation of object positions,
+           leading to different object placement-->
     <a-entity id="mesh2"
-              framed-block="facecolor: green; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+              framed-block="facecolor: green; framecolor: black"
               position = "0 0 0"
               instanced-mesh="capacity:5"></a-entity>
+    <!-- This geometry is created very small, and then scaled up via the mixin.-->
     <a-entity id="mesh3"
-              framed-block="facecolor: blue; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+              framed-block="facecolor: blue; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"
               position = "0 0 0"
               instanced-mesh="capacity:5"></a-entity>
     <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1"></a-mixin>
-    <a-mixin id="shape2" instanced-mesh-member="mesh:#mesh2"></a-mixin>
-    <a-mixin id="shape3" instanced-mesh-member="mesh:#mesh3"></a-mixin>
+    <a-mixin id="shape2" instanced-mesh-member="mesh:#mesh2" scale = "0.5 0.5 0.5"></a-mixin>
+    <a-mixin id="shape3" instanced-mesh-member="mesh:#mesh3" scale = "10 10 10"></a-mixin>
 
     <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block1" position = "-1 0 -6" mixin="shape2"></a-entity>
