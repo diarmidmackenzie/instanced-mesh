@@ -7,6 +7,15 @@ AFRAME.registerComponent('instanced-mesh', {
   init: function () {
     this.capacity = this.data.capacity;
     this.members = 0;
+
+    // List of members flagged for removal.  Used to efficiently delete
+    // multiple entries.
+    this.membersToRemove = [];
+
+    // Ordered list of member entity IDs.  This matches order in the Instanced
+    // Mesh matrix list.  Needed so that we can delete elements on request.
+    this.orderedMembersList = [];
+
     this.listeners = {
       memberAdded: this.memberAdded.bind(this),
       memberModified: this.memberModified.bind(this),
@@ -83,6 +92,9 @@ AFRAME.registerComponent('instanced-mesh', {
       for (ii = 0; ii < Math.min(mesh.count, this.data.capacity); ii ++ ) {
           this.instancedMesh.setMatrixAt(ii, mesh.getMatrixAt(ii));
       }
+
+      //!! Assumption this matches our internal view of members.
+      // We ought to check & warn if not...
     }
     this.members = ii;
 
@@ -95,16 +107,51 @@ AFRAME.registerComponent('instanced-mesh', {
 
   memberAdded: function(event) {
     // Not yet thought about transitations between frames of reference
-    // Just assume all in same FOR for now..
-    index = this.members;
+    // Just assume all in same Frame of Reference for now..
+
+    memberID = event.detail.member.id;
+
+    // First, choose the index for the new member.
+    // 2 possibilities...
+    // 1. If there are members pending deletion, just overwrite one of them.
+    if (this.membersToRemove.length > 0) {
+
+      // Grab the index, and remove this index from the list of pending deletions.
+      index = this.membersToRemove[0];
+      this.membersToRemove.splice(0, 1);
+      this.orderedMembersList[index] = memberID;
+    }
+    // 2. If nothing is  pending deletion, so just add to the end of the list as
+    //    a new member.
+    else
+    {
+      index = this.members;
+      this.members++;
+      this.orderedMembersList.push(memberID);
+
+      if (this.members > this.capacity) {
+        // Don't go over capacity.
+        console.warn(`Member not added to mesh ${this.el.id}.  Exceeded configured capacity of ${tis.capacity}`)
+        return;
+      }
+    }
+
+    // Pull object3D details to construct matrix.  Note that the
+    // matrix itself can't be relied upon to have been correctly intialized,
+    // which is why we don't use it directly.
     var position = event.detail.member.object3D.position
     var quaternion = event.detail.member.object3D.quaternion
     var scale = event.detail.member.object3D.scale
-    this.matrix.compose( position, quaternion, scale );
+    this.matrix.compose(position, quaternion, scale);
+    //console.log(`Mesh adding... Position: ${position.x} ${position.y}`)
 
     this.instancedMesh.setMatrixAt(index, this.matrix);
-    event.detail.member.emit("memberRegistered", {index: index});
-    this.members++;
+
+    // Diags: Dump full matrix of x/y positions:
+    for (var jj = 0; jj < this.members; jj++) {
+      //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
+    }
+
     this.instancedMesh.count = this.members;
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   },
@@ -118,18 +165,68 @@ AFRAME.registerComponent('instanced-mesh', {
 
   memberRemoved: function(event) {
 
-    // Shuffle down all later indices, and reduce the overall count of elements.
-    // Underlying this is a single linear array of 16 x this.members.
-    // Could potentially replace all this with a single Array splice command...
-    for (var ii = event.detail.index; ii < (this.members - 1); ii++) {
-      this.instancedMesh.getMatrixAt(ii + 1, this.matrix);
-      this.instancedMesh.setMatrixAt(ii, this.matrix);
-    }
-    this.members--;
-    this.instancedMesh.count = this.members;
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+    // If multiple members are removed at once, it's inefficient to process
+    // them individually.
 
+    // So we just mark a member as needing removal, and do the actual clean-up
+    // at the next tick, by which time we may have collected a number of
+    // deletions to handle all together.
+    //console.log("Removing mesh member with ID:" + event.detail.member.id);
+    this.membersToRemove.push(event.detail.member.id);
   },
+
+  tick: function (time, timeDelta) {
+
+    if (this.membersToRemove.length > 0) {
+      // We have members to Remove.
+      // We need to iterate through all members, as those that aren't removed
+      // still need to be shuffled up.
+      var removed = 0;
+
+      for (var ii = 0; ii < this.members; ii++) {
+        // Check whether this one is to be removed (taking into account
+        // index shuffling that has already taken place...)
+        // If so, increment the amount we are shuffling up by, which will
+        // lead to this entry being overwritten.
+
+        var matrixCursor = ii;
+        var membersCursor = ii - removed;
+
+        if (this.membersToRemove.includes(this.orderedMembersList[membersCursor])) {
+          //console.log(`Item to remove: ${this.orderedMembersList[membersCursor]} at position ${matrixCursor}`)
+          this.orderedMembersList.splice(membersCursor, 1);
+          removed++;
+        }
+        // Now do the shuffle up.
+        // If we just incremented the count of removed elements, the current
+        // element will get overwritten.
+        // Else items will just get shuffled up.
+        if (removed > 0) {
+          //console.log(`copying cell from ${matrixCursor + 1} to ${matrixCursor - removed + 1}`);
+
+          if (matrixCursor + 1 < this.members) {
+            this.instancedMesh.getMatrixAt(matrixCursor + 1, this.matrix);
+            this.instancedMesh.setMatrixAt(matrixCursor - removed + 1, this.matrix);
+          }
+        }
+
+      }
+      this.members -= removed;
+      this.instancedMesh.count = this.members;
+      this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+      // No further pending removals.
+      this.membersToRemove = [];
+
+      // Diags: Dump full matrix of x/y positions:
+      for (var jj = 0; jj < this.members; jj++) {
+        //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
+      }
+
+      //console.log("Removals done");
+    }
+  }
+
 });
 
 AFRAME.registerComponent('instanced-mesh-member', {
@@ -141,7 +238,6 @@ AFRAME.registerComponent('instanced-mesh-member', {
     this.index = -1;
     this.added = false;
     this.listeners = {
-      memberRegistered: this.memberRegistered.bind(this),
       object3DUpdated: this.object3DUpdated.bind(this),
     };
     this.attachEventListeners();
@@ -149,9 +245,10 @@ AFRAME.registerComponent('instanced-mesh-member', {
 
   play: function () {
     // We hold off adding the member to the mesh until this point
-    // becauase prior to this (e.g. on init or update), the scale properties of
-    // object3D don't seem to have been set to the correct values.    
+    // because prior to this (e.g. on init or update), the scale properties of
+    // object3D don't seem to have been set to the correct values.
     if (!this.added) {
+      //console.log(`Position: ${this.el.object3D.position.x} ${this.el.object3D.position.y}`)
       this.data.mesh.emit('memberAdded', {member: this.el});
       this.added = true;
     }
@@ -164,20 +261,14 @@ AFRAME.registerComponent('instanced-mesh-member', {
   },
 
   remove: function() {
-    this.data.mesh.emit("memberRemoved", {'index': this.index});
+
+    this.data.mesh.emit("memberRemoved", {'member': this.el});
   },
 
   // This should be invoked whenever the Object3D is updated.
   // Mirror any changes across to the parent instance mesh.
   object3DUpdated: function(event) {
-    this.data.mesh.emit('memberModified', {'index': this.index,
-                                          'member': this.el});
-  },
-
-  // Just store the index, so we can pass it back on
-  // modification or deletion
-  memberRegistered: function(event) {
-    this.index = event.detail.index;
+    this.data.mesh.emit('memberModified', {'member': this.el});
   }
 
 });

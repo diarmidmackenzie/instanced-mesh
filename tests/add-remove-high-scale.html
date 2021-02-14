@@ -1,0 +1,133 @@
+<html>
+  <head>
+    <!-- Add /remove blocks at high scale.
+         10k blocks in total
+         Add/remove 100 at a time.-->
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <script src="./framed-block.js"></script>
+    <script>
+    // If setting this above 100, need to adjust instanced-mesh-capcity too.
+    const SCALE = 100;
+    // How frequently to add/delete (msecs)
+    const INTERVAL = 1000;
+    // How many to add/delete (percentage)
+    const PERCENTAGE = 1;
+    // Whether to use Instanced Mesh (turn on/off for comparison)
+    const USE_IM = true;
+
+    AFRAME.registerComponent('add-remove', {
+      init: function() {
+        this.remove = true;
+        this.blockArray = [];
+        this.blocks = 0;
+        this.width = SCALE;
+        this.height = SCALE;
+        this.blocksToRemove = SCALE * SCALE * PERCENTAGE / 100;
+        for (var ii = 0; ii < this.width; ii++) {
+          for (var jj = 0; jj < this.height; jj++) {
+            this.createBlock(this.blocks, ii, jj);
+            this.blockArray.push(1);
+            this.blocks++;
+          }
+        }
+      },
+
+      createBlock: function(index, x, y) {
+        console.log(`create block ${index}: (${x}, ${y})`)
+        var sceneEl = document.querySelector('a-scene');
+        var entityEl = document.createElement('a-entity');
+        entityEl.setAttribute("id", "block" + index);
+        entityEl.setAttribute("position", `${(x * 0.1) - 5} ${y * 0.1} -6`);
+        if (USE_IM) {
+          entityEl.setAttribute("mixin", "shape1");
+        }
+        else {
+          entityEl.setAttribute("mixin", "shape1-no-im");
+        }
+
+        sceneEl.appendChild(entityEl);
+      },
+
+      destroyBlock: function(index) {
+        console.log(`destroy block ${index}`)
+        var sceneEl = document.querySelector('a-scene');
+        var block = document.querySelector("#block" + index);
+        sceneEl.removeChild(block);
+      },
+
+      tick: function (time, timeDelta) {
+        var interval = INTERVAL;
+        var last_time = time - timeDelta;
+        var remainderNow = time % (interval);
+        var lastRemainder = last_time % (interval);
+
+        var randInt = function() {
+          return(Math.floor(Math.random() * this.blocks));
+        }
+
+        if (remainderNow < lastRemainder) {
+          if (this.remove) {
+            for (var ii = 0; ii < this.blocksToRemove; ii++) {
+              // Find a block that exists to remove.
+              var index = randInt.call(this);
+              while (this.blockArray[index] == 0) {
+                index = randInt.call(this);
+              }
+              this.destroyBlock(index);
+              this.blockArray[index] = 0;
+            }
+
+            // Now turn around
+            this.remove = false;
+          }
+          else
+          {
+            // Add the missing blocks back.
+            var index  = 0;
+            for (var ii = 0; ii < this.width; ii++) {
+              for (var jj = 0; jj < this.height; jj++) {
+                if (this.blockArray[index] == 0) {
+                  // block was removed.  Add it back.
+                  this.createBlock(index, ii, jj);
+                  this.blockArray[index] = 1;
+                }
+                index++;
+              }
+            }
+
+            // turn around
+            this.remove = true;
+          }
+        }
+      }
+    });
+
+    </script>
+  </head>
+  <body>
+    <a-scene stats renderer="colorManagement:true">
+      <a-entity id="rig" movement-controls>
+        <a-entity id="camera" camera position="0 1.6 0" look-controls>
+        </a-entity>
+      </a-entity>
+
+      <!-- wall of blocks-->
+      <a-text position = "-4 -1 -6" color ="black"
+         value="This is a very large array of yellow blocks.  We are regularly deleting and recreating a random selection of the blocks.
+                Indicative performance... With 100 x 100 = 10k blocks, 1% added/deleted every 2 second cycle,
+                we see approx 45 to 55fps on a mid-spec desktop PC, when using Instanced Mesh.  If Instanced Mesh is not used, performance is about 5-8 fps."></a-text>
+      <a-entity id="mesh1"
+                framed-block="facecolor: yellow; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"
+                position = "0 0 0"
+                instanced-mesh="capacity:10000"></a-entity>
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1"></a-mixin>
+      <!-- Alternate mix-in used for testing without instanced mesh-->
+      <a-mixin id="shape1-no-im" framed-block="facecolor: yellow; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"></a-mixin>
+
+      <!-- entity to host the add/remove logic-->
+      <a-entity id="controller" add-remove></a-entity>
+    </a-scene>
+  </body>
+</html>
