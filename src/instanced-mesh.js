@@ -14,6 +14,17 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Ordered list of member entity IDs.  This matches order in the Instanced
     // Mesh matrix list.  Needed so that we can delete elements on request.
+    // I have not thought very deeply about performance of an array vs. e.g. an
+    // object used as a dictionary.
+    // We have 2 requirements in tension:
+    // A - for modifications, we want a fast lookup using the entity ID.
+    // B - for removals, we want to be able to remove an item and efficiently
+    //   update all the later indices, as we renumber to fill in the gap.
+    //
+    // While I have not tested comparative performance, we can easily meet A and
+    // B using an Array using findIndex (A) and splice (B).
+    // A dictionary-style object would be great for A, but harder for B, I suspect.
+
     this.orderedMembersList = [];
 
     this.listeners = {
