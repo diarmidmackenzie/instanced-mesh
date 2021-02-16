@@ -1,6 +1,6 @@
 AFRAME.registerComponent('instanced-mesh', {
   schema: {
-      capacity:   {type: 'number'},
+      capacity:   {type: 'number', default: 100},
       debug:      {type: 'boolean', default: false}
   },
 
