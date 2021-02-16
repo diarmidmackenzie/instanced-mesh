@@ -1,12 +1,13 @@
 AFRAME.registerComponent('instanced-mesh', {
   schema: {
-      capacity:   {type: 'number'}
-
+      capacity:   {type: 'number'},
+      debug:      {type: 'boolean', default: false}
   },
 
   init: function () {
     this.capacity = this.data.capacity;
     this.members = 0;
+    this.debug = this.data.debug;
 
     // List of members flagged for removal.  Used to efficiently delete
     // multiple entries.
@@ -179,8 +180,23 @@ AFRAME.registerComponent('instanced-mesh', {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
     const id = event.detail.member.id;
-
     const index = this.orderedMembersList.findIndex(x => (x == id));
+
+    if (index == -1) {
+      console.error(`Member ${id} not found for modification`)
+    }
+
+    if (this.debug) {
+      console.log(`Modifying member ${id} at position ${index}`);
+      this.instancedMesh.getMatrixAt(index, this.matrix);
+
+      var position = new THREE.Vector3();
+      position.setFromMatrixPosition(this.matrix);
+      console.log(`Old position:${position.x} ${position.y} ${position.z}`);
+      position.setFromMatrixPosition(event.detail.member.object3D.matrix);
+      console.log(`New position:${position.x} ${position.y} ${position.z}`);
+    }
+
     this.instancedMesh.setMatrixAt(index, event.detail.member.object3D.matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   },
@@ -195,6 +211,9 @@ AFRAME.registerComponent('instanced-mesh', {
     // deletions to handle all together.
     //console.log("Removing mesh member with ID:" + event.detail.member.id);
     this.membersToRemove.push(event.detail.member.id);
+    if (this.debug) {
+      console.log(`Member ${event.detail.member.id} queued up for removal`);
+    }
   },
 
   tick: function (time, timeDelta) {
@@ -216,6 +235,9 @@ AFRAME.registerComponent('instanced-mesh', {
 
         if (this.membersToRemove.includes(this.orderedMembersList[membersCursor])) {
           //console.log(`Item to remove: ${this.orderedMembersList[membersCursor]} at position ${matrixCursor}`)
+          if (this.debug) {
+            console.log(`Removing member ${this.orderedMembersList[membersCursor]} at position ${membersCursor}`);
+          }
           this.orderedMembersList.splice(membersCursor, 1);
           removed++;
         }
@@ -253,12 +275,14 @@ AFRAME.registerComponent('instanced-mesh', {
 
 AFRAME.registerComponent('instanced-mesh-member', {
   schema: {
-        mesh:       {type: 'selector'}
+        mesh:       {type: 'selector'},
+        debug:      {type: 'boolean', default: false}
   },
 
   init: function() {
     this.index = -1;
     this.added = false;
+    this.debug = this.data.debug;
     this.listeners = {
       object3DUpdated: this.object3DUpdated.bind(this),
     };
@@ -274,7 +298,9 @@ AFRAME.registerComponent('instanced-mesh-member', {
     if (this.visible) {
       // Object was previously visible.  But might not be any more...
       if (!this.el.object3D.visible) {
-        console.log("Removed (v):" + this.el.id);
+        if (this.debug) {
+          console.log("Removed (v):" + this.el.id);
+        }
         this.data.mesh.emit('memberRemoved', {member: this.el});
         this.visible = false;
       }
@@ -286,7 +312,9 @@ AFRAME.registerComponent('instanced-mesh-member', {
         if (!this.matrix.equals(this.el.object3D.matrix)) {
           // there's been some change to position, orientation or scale, so
           // mirror it.
-          console.log("Modified:" + this.el.id);
+          if (this.debug) {
+            console.log("Modified:" + this.el.id);
+          }
           this.data.mesh.emit('memberModified', {'member': this.el});
           this.matrix.copy(this.el.object3D.matrix);
         }
@@ -295,7 +323,9 @@ AFRAME.registerComponent('instanced-mesh-member', {
     else {
       // Object not previously visible.  But might have just become...
       if (this.el.object3D.visible) {
-        console.log("Added (v):" + this.el.id);
+        if (this.debug) {
+          console.log("Added (v):" + this.el.id);
+        }
         this.data.mesh.emit('memberAdded', {member: this.el});
         this.matrix.copy(this.el.object3D.matrix);
         this.visible = true;
@@ -310,8 +340,10 @@ AFRAME.registerComponent('instanced-mesh-member', {
     // object3D don't seem to have been set to the correct values.
     if ((!this.added) &&
         (this.el.object3D.visible)) {
-      //console.log(`Position: ${this.el.object3D.position.x} ${this.el.object3D.position.y}`)
-      console.log("Added:" + this.el.id);
+      if (this.debug) {
+        //console.log(`Position: ${this.el.object3D.position.x} ${this.el.object3D.position.y}`)
+        console.log("Added:" + this.el.id);
+      }
       this.data.mesh.emit('memberAdded', {member: this.el});
       this.matrix.copy(this.el.object3D.matrix);
       this.added = true;
@@ -323,13 +355,21 @@ AFRAME.registerComponent('instanced-mesh-member', {
   },
 
   remove: function() {
-    console.log("Removed:" + this.el.id);
+    if (this.debug) {
+      console.log("Removed:" + this.el.id);
+    }
     this.data.mesh.emit("memberRemoved", {'member': this.el});
   },
 
   // This should be invoked whenever the Object3D is updated.
   // Mirror any changes across to the parent instance mesh.
+  // IMPORTANT: make sure matrix is up to date with any applied
+  // changes, before making the updates to the Instanced Mesh.
   object3DUpdated: function(event) {
+    if (this.debug) {
+      console.log("Updated:" + this.el.id);
+    }
+    this.el.object3D.updateMatrix();
     this.update();
   }
 
