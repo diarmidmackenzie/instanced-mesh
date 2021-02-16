@@ -1,6 +1,5 @@
 # instanced-mesh
- Components to support use of three.js InstancedMesh object within A-Frame, to
- improve performance where a multiple identical objects are being used.
+A set of components to support use of three.js InstancedMesh object within A-Frame, which can dramatically improve rendeing performance where a multiple identical objects are being used.
 
 ## Overview
 
@@ -23,7 +22,7 @@ You can download it and include it like this:
 Or via JSDelivr CDN (check the releases in the repo for the best version number to use)
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh.js@v0.1-alpha/src/instanced-mesh.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.1-alpha/src/instanced-mesh.min.js"></script>
 ```
 
 ## Quickstart Guide
@@ -173,7 +172,7 @@ This can simply be replaced by the following - and the entities that make use of
 
 This doesn't exist yet.  It's an anticipated component to facilitate cascading of object3DUpdated events to all children beneath a parent.
 
-This will be required when movement of a parent object leads to movement of a large number of child objects that are members of an Instanced Mesh.  That will become necessary once we support diverse Frames of Reference for mesh & mesh members.
+Such cascading will be required when movement of a parent object leads to movement of a large number of child objects that are members of an Instanced Mesh.  That will become necessary once we support diverse Frames of Reference for mesh & mesh members. (coming soon... ???)
 
 
 
@@ -209,15 +208,29 @@ On the member entity:
 
 - Direct updates to object3D.matrix (position, rotation or scale)
 
+  
+
 ## Limitations
 
 The following are known limitations.  Some of these are easy to lift.  Others less so...
 
 - Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so animations applied to objects won't be reflected in the mesh.  It would be pretty easy to add an additional  component alongside animation that generated this event every tick, and as long as that was only applied to a small number of objects, performance would likely be fine.
+
 - Frustrum Culling.  This is where rendering can be skipped for objects completely outside the view of the camera don't get rendered at all.   This is complex, as Frustrum Culling would have to be assessed for the entire mesh, and it gets quite complicated to reliably figure out whether any member of the Instanced Mesh is in view.   I'm not sure whether this will ever be implemented.
+
 - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
+
 - Diverse Frames of Reference - This is not yet implemented.  It's relatively straightforward to map between the different Frames of Reference, but performance is a point of concern, especially when a Frame of Reference that affects a large number of members changes, and all positions have to be updated to reflect this.
+
 - Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
+
+  
+
+## Examples
+
+For now, see the various cases covered in /tests/ for examples of usage.
+
+
 
 ## Acknowledgements
 
