@@ -109,6 +109,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // We ought to check & warn if not...
     }
     this.members = ii;
+    this.instancedMesh.count = ii;
 
     // We don't want to use frustrum culling, as the object's position & shape
     // don't accurately reflect all the members of the Instanced Mesh, so
