@@ -1,6 +1,8 @@
 AFRAME.registerComponent('instanced-mesh', {
   schema: {
       capacity:   {type: 'number', default: 100},
+      fcradius:   {type: 'number', default: 0},
+      fccenter:   {type: 'vec3'},
       debug:      {type: 'boolean', default: false}
   },
 
@@ -8,6 +10,9 @@ AFRAME.registerComponent('instanced-mesh', {
     this.capacity = this.data.capacity;
     this.members = 0;
     this.debug = this.data.debug;
+
+    // Bounding sphere used for frustrum culling
+    this.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 0);
 
     // List of members flagged for removal.  Used to efficiently delete
     // multiple entries.
@@ -111,16 +116,28 @@ AFRAME.registerComponent('instanced-mesh', {
     this.members = ii;
     this.instancedMesh.count = ii;
 
-    // We don't want to use frustrum culling, as the object's position & shape
-    // don't accurately reflect all the members of the Instanced Mesh, so
-    // we'd be prone to objects disappearing even when in view.
-    this.instancedMesh.frustumCulled = false;
+    // Set up frustrum culling if configured.
+    // This uses a separate "boundingSphere" object that represents the
+    // maximum extent of all members of the mesh.
+    // If one is specified, we us this for frustrum culling.  If not, we don't
+    // use frustrum culling at all for this mesh.
+    if (this.data.fcradius > 0) {
+      this.boundingSphere.center.copy(this.data.fccenter);
+      this.boundingSphere.radius = this.data.fcradius;
+      this.instancedMesh.geometry.boundingSphere = this.boundingSphere;
+      this.instancedMesh.frustumCulled = true;
+    }
+    else
+    {
+      this.instancedMesh.frustumCulled = false;
+    }
 
     // Copied from A-Frame instancedmesh.  I don't understand why this is
     // added as a child of Object3D...
     // rather than e.g. this.el.setObject3D('mesh', this.instancedMesh);
     this.el.object3D.add(this.instancedMesh);
     this.el.object3D.remove(mesh);
+
   },
 
   memberAdded: function(event) {
