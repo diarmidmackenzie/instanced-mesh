@@ -2,7 +2,7 @@
   <head>
     <!-- Rotate blocks at high scale.
          2.5k blocks in total
-         All rotating.
+         50 % rotating.
          -->
     <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
@@ -74,12 +74,13 @@
       </a-entity>
 
       <!-- wall of blocks-->
-      <a-text position = "-4 -2 -6" color ="black"
+      <a-text position = "-4 -2.2 -7" color ="black"
          value="This is a large array of mixed color blocks.  A configured percentage of them should be slowly rotating (1 rad/second).
                 Some indicative performance testing at 50 x 50 blocks (note that blocks are spread out & therefore
                 performance may be different from other tests where they are tightly packed).
                 When 100% of blocks are rotating, performance isn't much different between Instanced Mesh and non-Instanced Mesh.
                 When the % rotating is lower, Instanced Mesh performs better (e.g. at 50% about 38fps, vs. 25fps without Instanced Mesh).
+                The default for this page is 50% (modify the constant at the top of the script for other values).
                 These figures from a mid-spec desktop PC."></a-text>
       <a-entity id="mesh1"
                 framed-block="facecolor: yellow; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"

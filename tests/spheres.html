@@ -1,7 +1,8 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@latest/src/instanced-mesh.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
   </head>
   <body>
     <a-scene stats renderer="colorManagement:true">
@@ -10,7 +11,11 @@
       <a-entity id="camera" camera position="0 1.6 0" look-controls>
       </a-entity>
     </a-entity>
-        
+
+    <a-text position = "-8 -1 -6" color ="black"
+       value="A selection of red speres,
+       all different sizes."></a-text>
+
     <a-entity id="mesh1"
               geometry= "primitive: sphere"
               material="color:red"
