@@ -75,27 +75,35 @@ AFRAME.registerComponent('instanced-mesh', {
     // Either way, we copy required properties across to a new InstancedMesh,
     // and replace the old one with the new one.
 
-    // material can be an array of materials.  We want the whole array.
-    // Why clone?  AFrame-InstancedMesh says:
-    // this component creates a .clone() of parent material because of a known
-    // threejs limitation.
-    // I don't yet have a reference for what that threejs limittation is, and
-    // whether it still applies.
-    if (Array.isArray(mesh.material)) {
-      material = [];
-      mesh.material.forEach(item => material.push(item.clone()));
-    }
-    else
-    {
-      material = mesh.material.clone();
-    }
 
     // Find the geometry.  Code from A-Frame instancedmesh
     // I don't really understand why this is the best way to get the geometry
     // but it seems to work ok...
+
+    // Working with GLTF models, it seems that the material is also
+    // kept on the same child node as the geometry.
+
+    // But this logic doesn't seem to work for all GLTFs models (for either
+    // geometry or material).  We should look at this further and try to do better
+    // but for now this is an improvement, at least.    
     mesh.traverse(function(node) {
         if(node.type != "Mesh") return;
         geometry = node.geometry;
+
+        // material can be an array of materials.  We want the whole array.
+        // Why clone?  AFrame-InstancedMesh says:
+        // this component creates a .clone() of parent material because of a known
+        // threejs limitation.
+        // I don't yet have a reference for what that threejs limittation is, and
+        // whether it still applies.
+        if (Array.isArray(node.material)) {
+          material = [];
+          node.material.forEach(item => material.push(item.clone()));
+        }
+        else
+        {
+          material = node.material.clone();
+        }
     })
 
     this.instancedMesh = new THREE.InstancedMesh(geometry,
