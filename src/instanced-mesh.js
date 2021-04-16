@@ -10,6 +10,8 @@ AFRAME.registerComponent('instanced-mesh', {
     this.capacity = this.data.capacity;
     this.members = 0;
     this.debug = this.data.debug;
+    this.meshLoaded = false;
+    this.eventQueue = [];
 
     // Bounding sphere used for frustrum culling
     this.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 0);
@@ -96,7 +98,6 @@ AFRAME.registerComponent('instanced-mesh', {
         geometry = node.geometry;
     })
 
-
     this.instancedMesh = new THREE.InstancedMesh(geometry,
                                                  material,
                                                  this.data.capacity);
@@ -138,11 +139,20 @@ AFRAME.registerComponent('instanced-mesh', {
     this.el.object3D.add(this.instancedMesh);
     this.el.object3D.remove(mesh);
 
+    this.meshLoaded = true;
+    this.processQueuedEvents();
   },
 
   memberAdded: function(event) {
     // Not yet thought about transitations between frames of reference
     // Just assume all in same Frame of Reference for now..
+
+    if (!this.meshLoaded) {
+      // Mesh not yet loaded, so instanced mesh not yet created.
+      // Queue this event up for later processing.
+      this.queueEvent(event)
+      return;
+    }
 
     const memberID = event.detail.member.id;
     var index;
@@ -195,6 +205,14 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   memberModified: function(event) {
+
+    if (!this.meshLoaded) {
+      // Mesh not yet loaded, so instanced mesh not yet created.
+      // Queue this event up for later processing.
+      this.queueEvent(event)
+      return;
+    }
+
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
     const id = event.detail.member.id;
@@ -221,6 +239,13 @@ AFRAME.registerComponent('instanced-mesh', {
 
   memberRemoved: function(event) {
 
+    if (!this.meshLoaded) {
+      // Mesh not yet loaded, so instanced mesh not yet created.
+      // Queue this event up for later processing.
+      this.queueEvent(event)
+      return;
+    }
+
     // If multiple members are removed at once, it's inefficient to process
     // them individually.
 
@@ -232,6 +257,36 @@ AFRAME.registerComponent('instanced-mesh', {
     if (this.debug) {
       console.log(`Member ${event.detail.member.id} queued up for removal`);
     }
+  },
+
+  queueEvent: function (event) {
+    this.eventQueue.push(event);
+  },
+
+  processQueuedEvents: function () {
+    this.eventQueue.forEach((item) => {
+      switch (item.type) {
+
+        case "memberAdded":
+          this.memberAdded(item);
+          break;
+
+        case "memberModified":
+          this.memberModified(item);
+          break;
+
+        case "memberRemoved":
+          this.memberRemoved(item);
+          break;
+
+        default:
+          console.log(`Unexpected Event Type: ${item.type}`);
+          break;
+      }
+
+      // Processed all queued events, so clear the queue.
+      this.eventQueue = [];
+    });
   },
 
   tick: function (time, timeDelta) {
