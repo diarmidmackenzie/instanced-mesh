@@ -103,6 +103,8 @@ Configuration as follows:
 - capacity: The number of members that can be in this mesh.  Excess capacity has a modest overhead in memory usage, and no impact on rendering costs.  Default: 100.  If you exceed this capacity, you'll get a console warning, and the last requested object will simply not be rendered.
 - fcradius: The radius for the bounding Sphere used for Frustrum Culling.  Default is 0, which means no frustrum culling occurs.  When specified with a positive value, frustrum culling is enabled on the mesh using a bounding sphere with this radius, and center fccenter (next property).  If set zero or negative, there is no frustrum culling, and the whole mesh is rendered the whole time, even when off camera.  Note that frustrum culling is all-or-nothing, applied to the whole mesh.  Frustrum culling of individual members is not possible.
 - fccenter: The center for the bounding Sphere used for Frustrum Culling.  This is only meaningful if fcradius is specified with a value greater than 0.  The format is 3 co-ordinates, separated with spaces (like a position), representing the X, Y and Z co-ordinates.  These co-ordinates are interpreted in the local position space of the entity the instanced-mesh is applied on (which may be different from world space).
+- layers: A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component 
+  - Note that the A-Frame Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component.
 - debug: enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.
 
 ### instanced-mesh-member
@@ -247,3 +249,7 @@ This component was a big help in getting started with three.js InstancedMesh in 
 https://github.com/EX3D/aframe-InstancedMesh
 
 And [@kfarr](https://stackoverflow.com/users/5347747/kieran-f) helped me to discover that repo, thanks to [this](https://stackoverflow.com/questions/66178788/how-can-i-merge-geometries-in-a-frame-without-losing-material-information) Stack Overflow answer.
+
+
+
+I'm indebted to 

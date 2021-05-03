@@ -3,7 +3,8 @@ AFRAME.registerComponent('instanced-mesh', {
       capacity:   {type: 'number', default: 100},
       fcradius:   {type: 'number', default: 0},
       fccenter:   {type: 'vec3'},
-      debug:      {type: 'boolean', default: false}
+      debug:      {type: 'boolean', default: false},
+      layers:     {type: 'string', default: ""}
   },
 
   init: function () {
@@ -139,6 +140,17 @@ AFRAME.registerComponent('instanced-mesh', {
     else
     {
       this.instancedMesh.frustumCulled = false;
+    }
+
+    if (this.data.layers !== "") {
+      const layerNumbers = this.data.layers.split(",").map(Number);
+      // Reset
+      this.instancedMesh.layers.disableAll();
+
+      // Apply
+      for (let num of layerNumbers) {
+        this.instancedMesh.layers.enable(num);
+      }
     }
 
     // Copied from A-Frame instancedmesh.  I don't understand why this is
