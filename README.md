@@ -252,4 +252,5 @@ And [@kfarr](https://stackoverflow.com/users/5347747/kieran-f) helped me to disc
 
 
 
-I'm indebted to 
+I'm indebted to @bryik's A-Frame Layers component for ideas on how to handle layers configuration:
+https://github.com/bryik/aframe-layers-component
