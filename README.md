@@ -22,7 +22,7 @@ You can download it and include it like this:
 Or via JSDelivr CDN (check the releases in the repo for the best version number to use)
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.1-alpha/src/instanced-mesh.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.3-alpha/src/instanced-mesh.min.js"></script>
 ```
 
 ## Quickstart Guide
@@ -165,7 +165,8 @@ This can simply be replaced by the following - and the entities that make use of
 
      <a-entity id="mesh-red-box"
                geometry="primitive: box;"
-               material="color:red">
+               material="color:red"
+               instanced-mesh>
     </a-entity>
     <a-mixin id="red-box"
              instanced-mesh-member="mesh:#mesh-red-box"
