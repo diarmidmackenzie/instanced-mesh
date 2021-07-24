@@ -3,6 +3,7 @@ AFRAME.registerComponent('instanced-mesh', {
       capacity:   {type: 'number', default: 100},
       fcradius:   {type: 'number', default: 0},
       fccenter:   {type: 'vec3'},
+      positioning: {type: 'string', default: "local"},
       debug:      {type: 'boolean', default: false},
       layers:     {type: 'string', default: ""}
   },
@@ -16,6 +17,11 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Bounding sphere used for frustrum culling
     this.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 0);
+
+    // Other objects used in frame of reference calculations.
+    this.position = new THREE.Vector3();
+    this.quaternion = new THREE.Quaternion();
+    this.scale = new THREE.Vector3();
 
     // List of members flagged for removal.  Used to efficiently delete
     // multiple entries.
@@ -58,6 +64,23 @@ AFRAME.registerComponent('instanced-mesh', {
     var material;
     var geometry;
 
+    // set configured positioning mode
+    switch (this.data.positioning) {
+      case "local":
+        this.localPositioning = true;
+        break;
+
+      case "world":
+        this.localPositioning = false;
+        break;
+
+      default:
+        console.log(`Unexpected value for 'positioning' attribute: ${this.data.positioning}`);
+        console.log(`Defaulting to "local" positioning`);
+        this.localPositioning = true;
+        break;
+    }
+
     // Code from A-Frame instancedmesh.  Possibility we are waiting for a
     // GLTF model to load.
     // !! We have a bug where using a geometry where that is specified on the
@@ -86,7 +109,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // But this logic doesn't seem to work for all GLTFs models (for either
     // geometry or material).  We should look at this further and try to do better
-    // but for now this is an improvement, at least.    
+    // but for now this is an improvement, at least.
     mesh.traverse(function(node) {
         if(node.type != "Mesh") return;
         geometry = node.geometry;
@@ -204,15 +227,8 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(memberID);
     }
 
-    // Pull object3D details to construct matrix.  Note that the
-    // matrix itself can't be relied upon to have been correctly intialized,
-    // which is why we don't use it directly.
-    var position = event.detail.member.object3D.position
-    var quaternion = event.detail.member.object3D.quaternion
-    var scale = event.detail.member.object3D.scale
-    this.matrix.compose(position, quaternion, scale);
-    //console.log(`Mesh adding... Position: ${position.x} ${position.y}`)
-
+    this.matrixFromMemberObject(event.detail.member.object3D,
+                                this.matrix)
     this.instancedMesh.setMatrixAt(index, this.matrix);
 
     // Diags: Dump full matrix of x/y positions:
@@ -222,6 +238,47 @@ AFRAME.registerComponent('instanced-mesh', {
 
     this.instancedMesh.count = this.members;
     this.instancedMesh.instanceMatrix.needsUpdate = true;
+  },
+
+  // Get the matrix to add to an instanced mesh from an object 3D
+  // allowing for positioning style (local or world)
+  //
+  // Uses a closure to make variables needed in the global case available
+  // efficiently
+  matrixFromMemberObject: function(object3D, matrix) {
+
+    if (this.localPositioning) {
+
+      // Pull object3D details to construct matrix.  Note that the
+      // matrix itself can't be relied upon to have been correctly intialized,
+      // which is why we don't use it directly.
+      // !! 24/7/21 - I'd like to understand this better...
+      //              could be a lot slicker if we could assume object3D matrix
+      //              is fully initialized...
+      matrix.compose(object3D.position,
+                     object3D.quaternion,
+                     object3D.scale);
+    }
+    else
+    {
+      object3D.getWorldPosition(this.position);
+      object3D.getWorldQuaternion(this.quaternion);
+      object3D.getWorldScale(this.scale);
+
+      // We now have world co-ordinates of the mesh member.
+      // Just need to transform into the frame of reference of the instanced
+      // mesh itself.
+      // As follows:
+      // Make sure parent MatrixWorld is up to date.
+      // Take it's inverse, and pre-multiply by it.
+      // This way, when the parent MatrxiWorld is applied to the object
+      // it will end up back where we wanted it.
+      this.el.object3D.parent.updateMatrixWorld();
+      var parentMatrix = this.el.object3D.parent.matrixWorld.invert()
+
+      matrix.compose(this.position, this.quaternion, this.scale);
+      matrix.premultiply(parentMatrix);
+    }
   },
 
   memberModified: function(event) {

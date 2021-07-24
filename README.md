@@ -37,7 +37,7 @@ Repeat the above for each type of object that you want to have multiple instance
 
 See the rest of this doc for more details, but this should be enough to get you started...
 
-Note: if your objects are not all in the same Frame of Reference as each other, you'll need to take more care - read on below...
+Note: if your objects are not all in the same Frame of Reference as each other, you'll need to take more care - read on below, specifically you probably need to set positioning to "world".
 
 ## Design Considerations
 
@@ -101,11 +101,39 @@ This entity should be in the same Frame of Reference as all the members of this 
 Configuration as follows:
 
 - capacity: The number of members that can be in this mesh.  Excess capacity has a modest overhead in memory usage, and no impact on rendering costs.  Default: 100.  If you exceed this capacity, you'll get a console warning, and the last requested object will simply not be rendered.
+
 - fcradius: The radius for the bounding Sphere used for Frustrum Culling.  Default is 0, which means no frustrum culling occurs.  When specified with a positive value, frustrum culling is enabled on the mesh using a bounding sphere with this radius, and center fccenter (next property).  If set zero or negative, there is no frustrum culling, and the whole mesh is rendered the whole time, even when off camera.  Note that frustrum culling is all-or-nothing, applied to the whole mesh.  Frustrum culling of individual members is not possible.
+
 - fccenter: The center for the bounding Sphere used for Frustrum Culling.  This is only meaningful if fcradius is specified with a value greater than 0.  The format is 3 co-ordinates, separated with spaces (like a position), representing the X, Y and Z co-ordinates.  These co-ordinates are interpreted in the local position space of the entity the instanced-mesh is applied on (which may be different from world space).
+
+- positioning: The positioning mode used for members in the mesh, one of:
+
+  - local: the member objects and the instanced mesh are assumed to be in the same position in the scene graph, and hence in the same frame of reference for position, scale & orientation.  The transform matrix for each member object is used naively to set the transform matrix for the instance in the instanced mesh.
+  - world: the member objects and the instanced mesh may be in different positions in the scene graph.  The transform matrix for each member object is transformed into a world matrix, and then into the frame of reference of the instanced mesh
+
+  Default value is "local".
+
+  (see also noted below on positioning)
+
 - layers: A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component 
+
   - Note that the A-Frame Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component.
+
 - debug: enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.
+
+#### Notes on positioning
+
+instanced-mesh supports 2 positioning modes, "local" and "world" as described above.
+
+Local positioning does not require any matrix transformations, and will typically perform better.  However, it can only be used when the instanced mesh and the members are at the same position in the scene graph (i.e. in the same frame of reference for position, orientation and scale).  If this is not the case, instanced mesh members position, orientation and scale will not match those of the member objects.
+
+World positioning will allow for instanced meshes to include members where the member objects are in different positions in the scene graph.  However, subsequent changes to positions of objects may lead to unexpected results:
+
+- If the instanced mesh, or a parent of it, is moved, then the members of the mesh will all be moved, even if the objects representing the members have not actually moved.
+- if a member object is moved (either directly, or as a result of the movement of a parent in the scene graph), is moved, the position of the instanced mesh member will only be updated when the object3DUpdated event is generated.  Where a parent is moved, it will be necessary to trigger this event on every child member object that has moved.
+  - A future "instanced-mesh-member-parent" component is envisaged to simplify this processing, but has not yet been implemented.
+
+Current needs for the "world" positioning mode are mostly in situations where the whole scene is static, and therefore these issues don't arise.  But if "world" positioning is used in dynamic scenes, these issues are likely to come up.
 
 ### instanced-mesh-member
 
@@ -179,11 +207,9 @@ This can simply be replaced by the following - and the entities that make use of
 
 
 
-### instanced-mesh-member-parent
+### instanced-mesh-member-parent (does not yet exist)
 
 This doesn't exist yet.  It's an anticipated component to facilitate cascading of object3DUpdated events to all children beneath a parent.
-
-Such cascading will be required when movement of a parent object leads to movement of a large number of child objects that are members of an Instanced Mesh.  That will become necessary once we support diverse Frames of Reference for mesh & mesh members. (coming soon... ???)
 
 
 
@@ -225,11 +251,11 @@ On the member entity:
 
 The following are known limitations.  Some of these are easy to lift.  Others less so...
 
-- Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so animations applied to objects won't be reflected in the mesh.  It would be pretty easy to add an additional  component alongside animation that generated this event every tick, and as long as that was only applied to a small number of objects, performance would likely be fine.
+- Testing of "world" positioning mode.  I haven't done yet any testing of this except with static objects.  Expected behaviour is described in "notes on positioning" section above.  But I haven't tested this yet, so actual behaviour may be different, or worse (it might even just crash!).
+
+- Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so animations applied to objects won't be reflected in the mesh.  It would be pretty easy to add an additional component alongside animation that generated this event every tick, and as long as that was only applied to a small number of objects, performance would likely be fine.
 
 - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
-
-- Diverse Frames of Reference - This is not yet implemented.  It's relatively straightforward to map between the different Frames of Reference, but performance is a point of concern, especially when a Frame of Reference that affects a large number of members changes, and all positions have to be updated to reflect this.
 
 - Frustrum Culling is supported, but there are no automatic calculations.  To use frustrum culling, the user of this component must explicitly specify the center and radius for a bounding sphere that contains all members of the Instanced Mesh.
 
