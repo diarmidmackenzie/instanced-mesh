@@ -25,6 +25,12 @@ Or via JSDelivr CDN (check the releases in the repo for the best version number 
 <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.3-alpha/src/instanced-mesh.min.js"></script>
 ```
 
+Or available on npm as aframe-instanced-mesh:
+
+https://www.npmjs.com/package/aframe-instanced-mesh
+
+
+
 ## Quickstart Guide
 
 The basic set-up is as follows:
