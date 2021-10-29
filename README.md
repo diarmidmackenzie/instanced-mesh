@@ -45,6 +45,42 @@ See the rest of this doc for more details, but this should be enough to get you 
 
 Note: if your objects are not all in the same Frame of Reference as each other, you'll need to take more care - read on below, specifically you probably need to set positioning to "world".
 
+## Examples
+
+#### Basic examples...
+
+[Basic Example (Blocks)](https://diarmidmackenzie.github.io/instanced-mesh/tests/basic-test.html)
+
+[Basic Example (Spheres)](https://diarmidmackenzie.github.io/instanced-mesh/tests/spheres.html)
+
+[Basic Example (different colored blocks - one mesh per color)](https://diarmidmackenzie.github.io/instanced-mesh/tests/multi-color.html)
+
+[3D Models](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models.htm)
+
+#### Specific capabilities of the component...
+
+[Adding and Removing Objects](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove.html)
+
+[Movement](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement.html)
+
+[Frustrum Culling](https://diarmidmackenzie.github.io/instanced-mesh/tests/frustrum-culling.html)
+
+[Multiple Layers](https://diarmidmackenzie.github.io/instanced-mesh/tests/multi-layer.html)
+
+[Non-visible elements](https://diarmidmackenzie.github.io/instanced-mesh/tests/non-visible.html)
+
+[Positioning (handling diverse frames of reference)](https://diarmidmackenzie.github.io/instanced-mesh/tests/positioning.html)
+
+[Different Scale Attributes](https://diarmidmackenzie.github.io/instanced-mesh/tests/scale-attribute.html)
+
+#### Scaling capabilities of instanced meshes...
+
+[Adding and Removing Objects at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-high-scale.html) 
+
+[Rotation at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/rotation-high-scale.html)
+
+
+
 ## Design Considerations
 
 #### When should you use an Instanced Mesh?
