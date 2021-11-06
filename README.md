@@ -79,7 +79,17 @@ Note: if your objects are not all in the same Frame of Reference as each other, 
 
 [Rotation at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/rotation-high-scale.html)
 
+[Updates](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates.html)
 
+#### Examples with Multi-mesh GLTF models
+
+[3D Models Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models-multi-mesh.html)
+
+[Movement Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement-multi-mesh.html)
+
+[Add & Remove Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-multi-mesh.html)
+
+[Updates Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates-multi-mesh.html)
 
 ## Interface
 
@@ -212,19 +222,17 @@ To support instanced meshes for these models, we create a separate Instanced Mes
 
 See examples:
 
-[3D Models Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models-multi-mesh.htm)
+[3D Models Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models-multi-mesh.html)
 
-[Movement Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement-multi-mesh.htm)
+[Movement Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement-multi-mesh.html)
 
-[Add & Remove Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-multi-mesh.htm)
+[Add & Remove Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-multi-mesh.html)
 
-
+[Updates Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates-multi-mesh.html)
 
 Some known issues:
 
 - Applying transforms to the instanced-mesh entity itself won't give the results you'd expect.  Apply any transforms that are required to the instances (either directly, or via mixin).
-
-- Updates to instanced mesh properties (e.g. changes to capacity) are almost certainly bugged.
 
 ## Supported Features
 
@@ -318,10 +326,10 @@ There are still a relatively large number of Instanced Meshes, but is not curren
 The following are known limitations.  Some of these are easy to lift.  Others less so...
 
 - Testing of "world" positioning mode.  I haven't done yet any testing of this except with static objects.  Expected behaviour is described in "notes on positioning" section above.  But I haven't tested this yet, so actual behaviour may be different, or worse (it might even just crash!).
-- I am extremely doubtful that "update" processing works, particularly in the case of multi-mesh models (but maybe it doesn't work at all).
 - Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so animations applied to objects won't be reflected in the mesh.  It would be pretty easy to add an additional component alongside animation that generated this event every tick, and as long as that was only applied to a small number of objects, performance would likely be fine.
-- Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
+  - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
 - Frustrum Culling is supported, but there are no automatic calculations.  To use frustrum culling, the user of this component must explicitly specify the center and radius for a bounding sphere that contains all members of the Instanced Mesh.
+- Update processing to change the properties of the instanced mesh basically works, but I am concerned we may have a small leak when we increase capacity, as I've not been able to cleanly dispose of the old Instances Meshes.
 - Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
 
 

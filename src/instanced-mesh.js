@@ -95,58 +95,39 @@ AFRAME.registerComponent('instanced-mesh', {
         return;
     }
 
-    // The mesh may be a regular Mesh (on creation) or a previously created
-    // instancedMesh (on update).
-    // Either way, we copy required properties across to a new InstancedMesh,
-    // and replace the old one with the new one.
+    if (originalMesh.count > 0) {
+      // we already have a set of instanced meshes in place.
+      console.assert(originalMesh === this.instancedMeshes[0])
 
-    // Build up an array of mesh nodes, recording for each:
-    // - its geometry
-    // - its materials(s)
-    // - its relative transform (sub-meshes within a GLTF can eac have their own
-    //    transform)
-    // We are going to need an Instanced Mesh for each of these mesh nodes.
-    meshNodes = this.constructMeshNodes(originalMesh);
-
-    this.instancedMeshes = [];
-    this.componentMatrices = [];
-    meshNodes.forEach((node, index) => {
-      var instancedMesh = new THREE.InstancedMesh(node.geometry,
-                                                  node.material,
-                                                  this.data.capacity);
-
-      // For each instanced mesh required, we store off both the instanced mesh
-      // itself. and the transform matrix for the component of the model that
-      // it represents.
-      this.instancedMeshes.push(instancedMesh);
-      this.componentMatrices.push(node.matrixWorld)
-
-    });
-
-    // If the old mesh contains instances, we should copy them across.
-    // if new capacity is less than old capacity, we'll lose some items.
-    // !! This is legacy code, and I have a strong suspicion it is completely
-    //    broken, and "update" processing does not work at all...
-    // Updates to instanced mesh properties (e.g. increasing capacity) need more
-    // testing.
-    var ii = 0;
-    if (originalMesh.count > 0)
-    {
-      // An existing InstancedMesh, with some members.
-      for (ii = 0; ii < Math.min(mesh.count, this.data.capacity); ii ++ ) {
-          this.instancedMeshes.forEach(mesh => {
-            mesh.setMatrixAt(ii, originalMesh.getMatrixAt(ii));
-
-          });
+      // but do they have enough capacity?
+      if (originalMesh.instanceMatrix.count < this.data.capacity) {
+        // resize instanced meshes
+        this.increaseInstancedMeshCapacity();
       }
-
-      //!! Assumption this matches our internal view of members.
-      // We ought to check & warn if not...
+      else {
+        // We can continue using existing instanced meshes.
+      }
     }
-    this.members = ii;
-    this.instancedMeshes.forEach(mesh => {
-      mesh.count = ii;
-    });
+    else {
+      // No instanced Meshes yet in place.  Analyze original mesh to see how to
+      // build the instanced Meshes.
+      this.meshNodes = this.constructMeshNodes(originalMesh);
+
+      this.instancedMeshes = [];
+      this.componentMatrices = [];
+
+      this.meshNodes.forEach((node, index) => {
+        var instancedMesh = new THREE.InstancedMesh(node.geometry,
+                                                    node.material,
+                                                    this.data.capacity);
+
+        // For each instanced mesh required, we store off both the instanced mesh
+        // itself. and the transform matrix for the component of the model that
+        // it represents.
+        this.instancedMeshes.push(instancedMesh);
+        this.componentMatrices.push(node.matrixWorld)
+      });
+    }
 
     // some other details that may need to be updated on the instanced meshes...
     this.updateFrustrumCulling();
@@ -159,10 +140,41 @@ AFRAME.registerComponent('instanced-mesh', {
     });
     this.el.object3D.remove(originalMesh);
 
+    // set the Object3D Map to point to the first instanced mesh.
+    this.el.setObject3D('mesh', this.instancedMeshes[0]);
+
     this.meshLoaded = true;
 
     // process any events pending on this mesh.
     this.processQueuedEvents();
+  },
+
+  increaseInstancedMeshCapacity: function() {
+
+    newMeshes = [];
+
+    this.meshNodes.forEach((node, index) => {
+      const oldMesh = this.instancedMeshes[index];
+      var newMesh = new THREE.InstancedMesh(node.geometry,
+                                            node.material,
+                                            this.data.capacity);
+      newMeshes.push(newMesh);
+      for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
+        oldMesh.getMatrixAt(ii, this.matrix)
+        newMesh.setMatrixAt(ii, this.matrix);
+      }
+
+      this.el.object3D.add(newMesh);
+      this.el.object3D.remove(oldMesh);
+
+      // THREE.js docs say we should also all this when finished with an Instanced Mesh.
+      // but doing so is causing an error.
+      // So maybe we have a small leak as a result of not doing this, but I don't know how to fix...
+      // oldMesh.dispose();
+    });
+
+    this.instancedMeshes = newMeshes;
+    this.el.setObject3D('mesh', this.instancedMeshes[0]);
   },
 
   updateFrustrumCulling: function() {

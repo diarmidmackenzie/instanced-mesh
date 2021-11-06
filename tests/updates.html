@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <script src="./framed-block.js"></script>
+    <script>
+
+    // every 5 seconds, update teh mesh capacity to a random value 15 to 99
+    setInterval(() => {
+                  mesh = document.querySelector("#mesh1");
+                  capacity = 15 + Math.floor(Math.random() * 85);
+                  mesh.setAttribute("instanced-mesh", {capacity: capacity});
+
+                  text = document.querySelector("#capacity");
+                  text.setAttribute("value", `Capacity: ${capacity}`);
+               },5000);
+
+    </script>
+
+  </head>
+  <body>
+    <a-scene stats renderer="colorManagement:true">
+
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
+
+    <a-entity id="rig" movement-controls>
+      <a-entity id="camera" camera position="0 1.6 0" look-controls>
+      </a-entity>
+    </a-entity>
+
+    <!-- wall of blocks-->
+    <a-text position = "-5 4 -6" color ="black"
+       value="This should show an array of 5 columns, 3 rows.
+              Yellow blocks with black edging.
+              This test makes random updates to capacity
+              to test out instanced Mesh Reallocation
+              (required whenever capacity increases)."></a-text>
+    <a-text id="capacity" position = "-5 3 -6" color ="black"
+             value="Capacity: 15"></a-text>
+    <a-entity id="mesh1"
+              framed-block="facecolor: yellow; framecolor: black"
+              position = "0 0 0"
+              instanced-mesh="capacity:15"></a-entity>
+    <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block1" position = "-1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block2" position = "0 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block3" position = "1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block4" position = "2 0 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="block5" position = "-2 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block6" position = "-1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block7" position = "0 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block8" position = "1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block9" position = "2 1 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="block10" position = "-2 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block11" position = "-1 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block12" position = "0 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block13" position = "1 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block14" position = "2 2 -6" mixin="shape1"></a-entity>
+
+</a-scene>
+
+</body>
