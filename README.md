@@ -75,7 +75,7 @@ Note: if your objects are not all in the same Frame of Reference as each other, 
 
 #### Scaling capabilities of instanced meshes...
 
-[Adding and Removing Objects at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-high-scale.html) 
+[Adding and Removing Objects at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-high-scale.html)
 
 [Rotation at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/rotation-high-scale.html)
 
@@ -112,7 +112,7 @@ Ideally, you'd use a single Instanced Mesh for all instances of a particular obj
 
 4. If you wish to use Frustrum Culling, it can only be applied to an entire Instanced Mesh.  Therefore if you have clusters of the same object, in multiple different areas, it may make sense to use different Instanced Meshes, so that one cluster can be frustrum culled, without affecting the other.
 
-   
+
 
 #### An illustrative Example...
 
@@ -157,7 +157,7 @@ Configuration as follows:
 
   (see also noted below on positioning)
 
-- layers: A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component 
+- layers: A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component
 
   - Note that the A-Frame Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component.
 
@@ -287,7 +287,7 @@ On the member entity:
 
 - Direct updates to object3D.matrix (position, rotation or scale)
 
-  
+
 
 ## Limitations
 
@@ -303,7 +303,7 @@ The following are known limitations.  Some of these are easy to lift.  Others le
 
 - Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
 
-  
+
 
 ## Examples
 
