@@ -81,57 +81,6 @@ Note: if your objects are not all in the same Frame of Reference as each other, 
 
 
 
-## Design Considerations
-
-#### When should you use an Instanced Mesh?
-
-Instanced Meshes work best for large collections of static objects, with the same geometry and materials, but different positions, orientations and/or scales.  This is where you will see the most substantial benefits.
-
-Instanced Meshes can also be used for objects that:
-
-- are moving, rotating or changing in scale
-- have dynamic lifecycles (creation & deletion)
-
-In theory Instanced Meshes also allow for color variation between instances, but this only works for single-color objects, and isn't yet supported in this component.
-
-An Instanced Mesh requires the same number of draw calls for the entire set of instances, that would be required for a single object.  Therefore even if you only have 2 instances of an object, an Instanced Mesh could reduce the number of draw calls required.  However you'll get the greatest impact if you prioritize the objects with the most instances first.
-
-For objects that are dynamic (either in terms of movement/rotation/scale, or creation/deletion), Instanced Mesh gives the same benefits in terms of rendering, but there is also an additional cost in keeping the Instanced Mesh in sync with the A-Frame entities.  Some basic testing suggests that if *all* the entities are moving every frame, you'll get about the same performance with Instanced Mesh, that you would without it.  If *hal*f the entities are moving every frame, you'll get a noticeable (maybe 50%) performance gain from using Instanced Meshes.
-
-Creation, and especially deletion are a bit more expensive, but it's unless the lifecycle is extremely fast, it's likely that you'll see some gains from Instanced Mesh.  Hopefully it's straightforward to try it out, see what the gains are like, and remove it if it's not making enough of a difference.
-
-#### How many should you use?
-
-Ideally, you'd use a single Instanced Mesh for all instances of a particular object.  However there are a few reasons why you might want to split your objects between multiple Instanced Meshes, or not include some entities in the Instanced Mesh at all...
-
-1. Different colored objects.  Three.js InstancedMesh can support different colors for different instances, but that's not supported by this component yet.  In any case, it only works for single-colored objects.  An InstancedMesh *can* be used with multi-colored objects (see many of the examples in /tests/ which mostly use 2-material objects), but you need a separate Instanced Mesh for each set of colors.
-
-2. Different Frames of Reference.  Currently, the position and orientation of all members of an Instanced Mesh must be in the same Frame of Reference.  That's a restriction that I hope to remove in future, but even when I do, there will be a moderate performance overhead in overlapping between Frames of Reference, so it may be that you get still better performance in some cases by having a separate Instanced Mesh for each Frame of Reference.
-
-3. Separation of objects / avoidance of complexity.  When entities are rendered via an Instanced Mesh, rather than direct A-Frame rendering, this adds a level of complexity.  If objects aren't behaving as expected, it makes debugging and diagnosis of problems more complex, and increases the risk of interactions between otherwise separated parts of your scene.  This is particularly true if everything is piled into a small number of communal Instanced Meshes.  This may be best for performance, but it may become much harder to figure out what is going on, when things don't act as you expect.
-
-4. If you wish to use Frustrum Culling, it can only be applied to an entire Instanced Mesh.  Therefore if you have clusters of the same object, in multiple different areas, it may make sense to use different Instanced Meshes, so that one cluster can be frustrum culled, without affecting the other.
-
-
-
-#### An illustrative Example...
-
-To illustrate with an example, this component was originally developed to support a [Tetris game](https://github.com/diarmidmackenzie/tetrisland), in which:
-
-- each Arena contained a large number of blocks of different colors
-- there were multiple gameplay Arenas within the overall scene.
-
-My current implementation uses:
-
-- Separate Instanced Meshes for each arena (for reasons 2 & 3)
-- Within each Arena, separate Instanced Meshes for each block color (for reason 1)
-- Frustrum Culling applied to Instanced Meshes within each arena.
-- No Instanced Mesh at all for blocks that are currently in play.  Only those that have landed in the arena are incorporated into Instanced Meshes.
-
-With these decisions, I've been striking a balance between performance and complexity.  Initially I kept the arenas separate for reasons of complexity.  But subsequently, this separation has allowed for effective frustrum culling to be set up, which has further boosted performance.
-
-There are still a relatively large number of Instanced Meshes, but is not currently an issue, as performance is now bottlenecked by the number of triangles being rendered, rather than by the number of three.js calls.
-
 ## Interface
 
 ### instanced-mesh
@@ -267,6 +216,8 @@ See examples:
 
 [Movement Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement-multi-mesh.htm)
 
+[Add & Remove Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-multi-mesh.htm)
+
 
 
 Some known issues:
@@ -274,7 +225,6 @@ Some known issues:
 - Applying transforms to the instanced-mesh entity itself won't give the results you'd expect.  Apply any transforms that are required to the instances (either directly, or via mixin).
 
 - Updates to instanced mesh properties (e.g. changes to capacity) are almost certainly bugged.
-- Add/remove function not yet working cleanly.
 
 ## Supported Features
 
@@ -310,18 +260,68 @@ On the member entity:
 
 
 
+## Design Considerations
+
+#### When should you use an Instanced Mesh?
+
+Instanced Meshes work best for large collections of static objects, with the same geometry and materials, but different positions, orientations and/or scales.  This is where you will see the most substantial benefits.
+
+Instanced Meshes can also be used for objects that:
+
+- are moving, rotating or changing in scale
+- have dynamic lifecycles (creation & deletion)
+
+In theory Instanced Meshes also allow for color variation between instances, but this only works for single-color objects, and isn't yet supported in this component.
+
+An Instanced Mesh requires the same number of draw calls for the entire set of instances, that would be required for a single object.  Therefore even if you only have 2 instances of an object, an Instanced Mesh could reduce the number of draw calls required.  However you'll get the greatest impact if you prioritize the objects with the most instances first.
+
+For objects that are dynamic (either in terms of movement/rotation/scale, or creation/deletion), Instanced Mesh gives the same benefits in terms of rendering, but there is also an additional cost in keeping the Instanced Mesh in sync with the A-Frame entities.  Some basic testing suggests that if *all* the entities are moving every frame, you'll get about the same performance with Instanced Mesh, that you would without it.  If *hal*f the entities are moving every frame, you'll get a noticeable (maybe 50%) performance gain from using Instanced Meshes.
+
+Creation, and especially deletion are a bit more expensive, but it's unless the lifecycle is extremely fast, it's likely that you'll see some gains from Instanced Mesh.  Hopefully it's straightforward to try it out, see what the gains are like, and remove it if it's not making enough of a difference.
+
+#### How many should you use?
+
+Ideally, you'd use a single Instanced Mesh for all instances of a particular object.  However there are a few reasons why you might want to split your objects between multiple Instanced Meshes, or not include some entities in the Instanced Mesh at all...
+
+1. Different colored objects.  Three.js InstancedMesh can support different colors for different instances, but that's not supported by this component yet.  In any case, it only works for single-colored objects.  An InstancedMesh *can* be used with multi-colored objects (see many of the examples in /tests/ which mostly use 2-material objects), but you need a separate Instanced Mesh for each set of colors.
+
+2. Different Frames of Reference.  Currently, the position and orientation of all members of an Instanced Mesh must be in the same Frame of Reference.  That's a restriction that I hope to remove in future, but even when I do, there will be a moderate performance overhead in overlapping between Frames of Reference, so it may be that you get still better performance in some cases by having a separate Instanced Mesh for each Frame of Reference.
+
+3. Separation of objects / avoidance of complexity.  When entities are rendered via an Instanced Mesh, rather than direct A-Frame rendering, this adds a level of complexity.  If objects aren't behaving as expected, it makes debugging and diagnosis of problems more complex, and increases the risk of interactions between otherwise separated parts of your scene.  This is particularly true if everything is piled into a small number of communal Instanced Meshes.  This may be best for performance, but it may become much harder to figure out what is going on, when things don't act as you expect.
+
+4. If you wish to use Frustrum Culling, it can only be applied to an entire Instanced Mesh.  Therefore if you have clusters of the same object, in multiple different areas, it may make sense to use different Instanced Meshes, so that one cluster can be frustrum culled, without affecting the other.
+
+
+
+#### An illustrative Example...
+
+To illustrate with an example, this component was originally developed to support a [Tetris game](https://github.com/diarmidmackenzie/tetrisland), in which:
+
+- each Arena contained a large number of blocks of different colors
+- there were multiple gameplay Arenas within the overall scene.
+
+My current implementation uses:
+
+- Separate Instanced Meshes for each arena (for reasons 2 & 3)
+- Within each Arena, separate Instanced Meshes for each block color (for reason 1)
+- Frustrum Culling applied to Instanced Meshes within each arena.
+- No Instanced Mesh at all for blocks that are currently in play.  Only those that have landed in the arena are incorporated into Instanced Meshes.
+
+With these decisions, I've been striking a balance between performance and complexity.  Initially I kept the arenas separate for reasons of complexity.  But subsequently, this separation has allowed for effective frustrum culling to be set up, which has further boosted performance.
+
+There are still a relatively large number of Instanced Meshes, but is not currently an issue, as performance is now bottlenecked by the number of triangles being rendered, rather than by the number of three.js calls.
+
+
+
 ## Limitations
 
 The following are known limitations.  Some of these are easy to lift.  Others less so...
 
 - Testing of "world" positioning mode.  I haven't done yet any testing of this except with static objects.  Expected behaviour is described in "notes on positioning" section above.  But I haven't tested this yet, so actual behaviour may be different, or worse (it might even just crash!).
-
+- I am extremely doubtful that "update" processing works, particularly in the case of multi-mesh models (but maybe it doesn't work at all).
 - Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so animations applied to objects won't be reflected in the mesh.  It would be pretty easy to add an additional component alongside animation that generated this event every tick, and as long as that was only applied to a small number of objects, performance would likely be fine.
-
 - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
-
 - Frustrum Culling is supported, but there are no automatic calculations.  To use frustrum culling, the user of this component must explicitly specify the center and radius for a bounding sphere that contains all members of the Instanced Mesh.
-
 - Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
 
 
