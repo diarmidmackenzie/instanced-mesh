@@ -114,6 +114,10 @@ AFRAME.registerComponent('instanced-mesh', {
       var instancedMesh = new THREE.InstancedMesh(node.geometry,
                                                   node.material,
                                                   this.data.capacity);
+
+      // For each instanced mesh required, we store off both the instanced mesh
+      // itself. and the transform matrix for the component of the model that
+      // it represents.
       this.instancedMeshes.push(instancedMesh);
       this.componentMatrices.push(node.matrixWorld)
 
@@ -121,8 +125,8 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // If the old mesh contains instances, we should copy them across.
     // if new capacity is less than old capacity, we'll lose some items.
-    // !! This function is almost certainly not going to work for multi-mesh
-    //    objects...
+    // !! This is legacy code, and I have a strong suspicion it is completely
+    //    broken, and "update" processing does not work at all...
     // Updates to instanced mesh properties (e.g. increasing capacity) need more
     // testing.
     var ii = 0;
@@ -144,6 +148,24 @@ AFRAME.registerComponent('instanced-mesh', {
       mesh.count = ii;
     });
 
+    // some other details that may need to be updated on the instanced meshes...
+    this.updateFrustrumCulling();
+    this.updateLayers();
+
+    // Add all the instanced meshes as children of the object3D, and remove
+    // the original mesh.
+    this.instancedMeshes.forEach(mesh => {
+      this.el.object3D.add(mesh);
+    });
+    this.el.object3D.remove(originalMesh);
+
+    this.meshLoaded = true;
+
+    // process any events pending on this mesh.
+    this.processQueuedEvents();
+  },
+
+  updateFrustrumCulling: function() {
 
     // Set up frustrum culling if configured.
     // This uses a separate "boundingSphere" object that represents the
@@ -164,6 +186,9 @@ AFRAME.registerComponent('instanced-mesh', {
         mesh.frustumCulled = false;
       });
     }
+  },
+
+  updateLayers: function() {
 
     if (this.data.layers !== "") {
       const layerNumbers = this.data.layers.split(",").map(Number);
@@ -172,7 +197,6 @@ AFRAME.registerComponent('instanced-mesh', {
         mesh.layers.disableAll();
       });
 
-
       // Apply
       for (let num of layerNumbers) {
         this.instancedMeshes.forEach(mesh => {
@@ -180,20 +204,13 @@ AFRAME.registerComponent('instanced-mesh', {
         });
       }
     }
-
-    // Add all the instanced meshes as children of the object3D, and remove
-    // the original mesh.
-    this.instancedMeshes.forEach(mesh => {
-      this.el.object3D.add(mesh);
-    });
-    this.el.object3D.remove(originalMesh);
-
-    this.meshLoaded = true;
-
-    // process any events pending on this mesh.
-    this.processQueuedEvents();
   },
 
+  // This constructs our inetrnal view of the properties of the original Mesh
+  // that we need to capture for instancing, namely:
+  // - geometry of each component
+  // - material(s) of each component
+  // - transforms of each component.
   constructMeshNodes: function(originalMesh) {
     meshNodes  = [];
 
@@ -234,8 +251,6 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   memberAdded: function(event) {
-    // Not yet thought about transitations between frames of reference
-    // Just assume all in same Frame of Reference for now..
 
     if (!this.meshLoaded) {
       // Mesh not yet loaded, so instanced mesh not yet created.
@@ -287,6 +302,9 @@ AFRAME.registerComponent('instanced-mesh', {
     });
   },
 
+  // For a given index position, across all instanced meshes, update the
+  // matrices to match the transform of the member object
+  // (provided in the object3D)
   updateMatricesFromMemberObject(object3D, index) {
 
     this.matrix = this.matrixFromMemberObject(object3D);
@@ -473,7 +491,6 @@ AFRAME.registerComponent('instanced-mesh', {
             });
           }
         }
-
       }
       this.members -= removed;
 
@@ -481,7 +498,7 @@ AFRAME.registerComponent('instanced-mesh', {
         mesh.count = this.members;
         mesh.instanceMatrix.needsUpdate = true;
       });
-      
+
       // No further pending removals.
       this.membersToRemove = [];
 
