@@ -19,6 +19,7 @@ AFRAME.registerComponent('instanced-mesh', {
     this.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 0);
 
     // Other objects used in frame of reference calculations.
+    // Only used for working - these don't contain any persistent meaingful data.
     this.position = new THREE.Vector3();
     this.quaternion = new THREE.Quaternion();
     this.scale = new THREE.Vector3();
@@ -51,6 +52,9 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Used for working, to save re-allocations.
     this.matrix = new THREE.Matrix4();
+    this.debugMatrix = new THREE.Matrix4();
+    this.componentMatrix = new THREE.Matrix4();
+
   },
 
   attachEventListeners: function() {
@@ -60,9 +64,6 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   update: function () {
-
-    var material;
-    var geometry;
 
     // set configured positioning mode
     switch (this.data.positioning) {
@@ -81,73 +82,102 @@ AFRAME.registerComponent('instanced-mesh', {
         break;
     }
 
-    // Code from A-Frame instancedmesh.  Possibility we are waiting for a
-    // GLTF model to load.
+    // Possible we are waiting for a GLTF model to load.  If so, defer processing...
     // !! We have a bug where using a geometry where that is specified on the
-    // object *after* instanced-mesh.  This gets initialized first but there
+    // object *after* instanced-mesh.  This component gets initialized first but there
     // is no "model-loaded" event.  What's the equivalent?
-    var mesh = this.el.getObject3D('mesh')
-    if (!mesh) {
+    // For now, solution is to always specify instanced-mesh *after* geometry.
+    var originalMesh = this.el.getObject3D('mesh')
+    if (!originalMesh) {
         this.el.addEventListener('model-loaded', e => {
         this.update.call(this, this.data)
         })
         return;
     }
 
-    // The mesh may be a regular Mesh (on creation) or a previously created
-    // instancedMesh (on update).
-    // Either way, we copy required properties across to a new InstancedMesh,
-    // and replace the old one with the new one.
+    if (originalMesh.count > 0) {
+      // we already have a set of instanced meshes in place.
+      console.assert(originalMesh === this.instancedMeshes[0])
 
+      // but do they have enough capacity?
+      if (originalMesh.instanceMatrix.count < this.data.capacity) {
+        // resize instanced meshes
+        this.increaseInstancedMeshCapacity();
+      }
+      else {
+        // We can continue using existing instanced meshes.
+      }
+    }
+    else {
+      // No instanced Meshes yet in place.  Analyze original mesh to see how to
+      // build the instanced Meshes.
+      this.meshNodes = this.constructMeshNodes(originalMesh);
 
-    // Find the geometry.  Code from A-Frame instancedmesh
-    // I don't really understand why this is the best way to get the geometry
-    // but it seems to work ok...
+      this.instancedMeshes = [];
+      this.componentMatrices = [];
 
-    // Working with GLTF models, it seems that the material is also
-    // kept on the same child node as the geometry.
+      this.meshNodes.forEach((node, index) => {
+        var instancedMesh = new THREE.InstancedMesh(node.geometry,
+                                                    node.material,
+                                                    this.data.capacity);
 
-    // But this logic doesn't seem to work for all GLTFs models (for either
-    // geometry or material).  We should look at this further and try to do better
-    // but for now this is an improvement, at least.
-    mesh.traverse(function(node) {
-        if(node.type != "Mesh") return;
-        geometry = node.geometry;
+        // For each instanced mesh required, we store off both the instanced mesh
+        // itself. and the transform matrix for the component of the model that
+        // it represents.
+        this.instancedMeshes.push(instancedMesh);
+        this.componentMatrices.push(node.matrixWorld)
+      });
+    }
 
-        // material can be an array of materials.  We want the whole array.
-        // Why clone?  AFrame-InstancedMesh says:
-        // this component creates a .clone() of parent material because of a known
-        // threejs limitation.
-        // I don't yet have a reference for what that threejs limittation is, and
-        // whether it still applies.
-        if (Array.isArray(node.material)) {
-          material = [];
-          node.material.forEach(item => material.push(item.clone()));
-        }
-        else
-        {
-          material = node.material.clone();
-        }
-    })
+    // some other details that may need to be updated on the instanced meshes...
+    this.updateFrustrumCulling();
+    this.updateLayers();
 
-    this.instancedMesh = new THREE.InstancedMesh(geometry,
-                                                 material,
-                                                 this.data.capacity);
-    // If the old mesh contains instances, we should copy them across.
-    // if new capacity is less than old capacity, we'll lose some items.
-    var ii = 0;
-    if (mesh.count > 0)
-    {
-      // An existing InstancedMesh, with some members.
-      for (ii = 0; ii < Math.min(mesh.count, this.data.capacity); ii ++ ) {
-          this.instancedMesh.setMatrixAt(ii, mesh.getMatrixAt(ii));
+    // Add all the instanced meshes as children of the object3D, and remove
+    // the original mesh.
+    this.instancedMeshes.forEach(mesh => {
+      this.el.object3D.add(mesh);
+    });
+    this.el.object3D.remove(originalMesh);
+
+    // set the Object3D Map to point to the first instanced mesh.
+    this.el.setObject3D('mesh', this.instancedMeshes[0]);
+
+    this.meshLoaded = true;
+
+    // process any events pending on this mesh.
+    this.processQueuedEvents();
+  },
+
+  increaseInstancedMeshCapacity: function() {
+
+    newMeshes = [];
+
+    this.meshNodes.forEach((node, index) => {
+      const oldMesh = this.instancedMeshes[index];
+      var newMesh = new THREE.InstancedMesh(node.geometry,
+                                            node.material,
+                                            this.data.capacity);
+      newMeshes.push(newMesh);
+      for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
+        oldMesh.getMatrixAt(ii, this.matrix)
+        newMesh.setMatrixAt(ii, this.matrix);
       }
 
-      //!! Assumption this matches our internal view of members.
-      // We ought to check & warn if not...
-    }
-    this.members = ii;
-    this.instancedMesh.count = ii;
+      this.el.object3D.add(newMesh);
+      this.el.object3D.remove(oldMesh);
+
+      // THREE.js docs say we should also all this when finished with an Instanced Mesh.
+      // but doing so is causing an error.
+      // So maybe we have a small leak as a result of not doing this, but I don't know how to fix...
+      // oldMesh.dispose();
+    });
+
+    this.instancedMeshes = newMeshes;
+    this.el.setObject3D('mesh', this.instancedMeshes[0]);
+  },
+
+  updateFrustrumCulling: function() {
 
     // Set up frustrum culling if configured.
     // This uses a separate "boundingSphere" object that represents the
@@ -157,38 +187,82 @@ AFRAME.registerComponent('instanced-mesh', {
     if (this.data.fcradius > 0) {
       this.boundingSphere.center.copy(this.data.fccenter);
       this.boundingSphere.radius = this.data.fcradius;
-      this.instancedMesh.geometry.boundingSphere = this.boundingSphere;
-      this.instancedMesh.frustumCulled = true;
+      this.instancedMeshes.forEach(mesh => {
+        mesh.geometry.boundingSphere = this.boundingSphere;
+        mesh.frustumCulled = true;
+      });
     }
     else
     {
-      this.instancedMesh.frustumCulled = false;
+      this.instancedMeshes.forEach(mesh => {
+        mesh.frustumCulled = false;
+      });
     }
+  },
+
+  updateLayers: function() {
 
     if (this.data.layers !== "") {
       const layerNumbers = this.data.layers.split(",").map(Number);
       // Reset
-      this.instancedMesh.layers.disableAll();
+      this.instancedMeshes.forEach(mesh => {
+        mesh.layers.disableAll();
+      });
 
       // Apply
       for (let num of layerNumbers) {
-        this.instancedMesh.layers.enable(num);
+        this.instancedMeshes.forEach(mesh => {
+          mesh.layers.enable(num);
+        });
       }
     }
+  },
 
-    // Copied from A-Frame instancedmesh.  I don't understand why this is
-    // added as a child of Object3D...
-    // rather than e.g. this.el.setObject3D('mesh', this.instancedMesh);
-    this.el.object3D.add(this.instancedMesh);
-    this.el.object3D.remove(mesh);
+  // This constructs our inetrnal view of the properties of the original Mesh
+  // that we need to capture for instancing, namely:
+  // - geometry of each component
+  // - material(s) of each component
+  // - transforms of each component.
+  constructMeshNodes: function(originalMesh) {
+    meshNodes  = [];
 
-    this.meshLoaded = true;
-    this.processQueuedEvents();
+    originalMesh.updateMatrixWorld();
+    originalMesh.traverse(function(node) {
+
+      var material;
+      var geometry;
+
+      if(node.type != "Mesh") return;
+      geometry = node.geometry;
+
+      // material can be an array of materials.  We want the whole array.
+      // Why clone?  AFrame-InstancedMesh says:
+      // this component creates a .clone() of parent material because of a known
+      // threejs limitation.
+      // I don't yet have a reference for what that threejs limittation is, and
+      // whether it still applies.
+      if (Array.isArray(node.material)) {
+        material = [];
+        node.material.forEach(item => material.push(item.clone()));
+      }
+      else
+      {
+        material = node.material.clone();
+      }
+
+      node.updateMatrixWorld();
+      this.matrix = node.matrixWorld.clone();
+      this.matrix.premultiply(originalMesh.matrixWorld.invert());
+
+      meshNodes.push({'geometry' : geometry,
+                      'material' : material,
+                      'matrixWorld': this.matrix});
+    })
+
+    return meshNodes;
   },
 
   memberAdded: function(event) {
-    // Not yet thought about transitations between frames of reference
-    // Just assume all in same Frame of Reference for now..
 
     if (!this.meshLoaded) {
       // Mesh not yet loaded, so instanced mesh not yet created.
@@ -227,25 +301,56 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(memberID);
     }
 
-    this.matrixFromMemberObject(event.detail.member.object3D,
-                                this.matrix)
-    this.instancedMesh.setMatrixAt(index, this.matrix);
+    this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
       //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
     //}
 
-    this.instancedMesh.count = this.members;
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+    this.instancedMeshes.forEach(mesh => {
+      mesh.count = this.members;
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+  },
+
+  // For a given index position, across all instanced meshes, update the
+  // matrices to match the transform of the member object
+  // (provided in the object3D)
+  updateMatricesFromMemberObject(object3D, index) {
+
+    this.matrix = this.matrixFromMemberObject(object3D);
+
+    this.instancedMeshes.forEach((mesh, componentIndex) => {
+
+      if (this.debug) {
+        //console.log(`Modifying member ${id} at position ${index}`);
+        console.log(`Setting matrix for component index ${componentIndex}`)
+
+        mesh.getMatrixAt(index, this.debugMatrix);
+
+        var position = this.position;
+        position.setFromMatrixPosition(this.debugMatrix);
+        console.log(`Old position:${position.x} ${position.y} ${position.z}`);
+        position.setFromMatrixPosition(object3D.matrix);
+        console.log(`New position:${position.x} ${position.y} ${position.z}`);
+      }
+
+      this.componentMatrix = this.matrix.clone();
+
+      this.componentMatrix.multiply(this.componentMatrices[componentIndex]);
+      mesh.setMatrixAt(index, this.componentMatrix);
+
+      mesh.instanceMatrix.needsUpdate = true;
+    });
   },
 
   // Get the matrix to add to an instanced mesh from an object 3D
   // allowing for positioning style (local or world)
-  //
-  // Uses a closure to make variables needed in the global case available
-  // efficiently
-  matrixFromMemberObject: function(object3D, matrix) {
+  matrixFromMemberObject: function(object3D) {
+
+    // matrix used for working...
+    const matrix = this.matrix;
 
     if (this.localPositioning) {
 
@@ -271,7 +376,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // As follows:
       // Make sure parent MatrixWorld is up to date.
       // Take it's inverse, and pre-multiply by it.
-      // This way, when the parent MatrxiWorld is applied to the object
+      // This way, when the parent MatrixWorld is applied to the object
       // it will end up back where we wanted it.
       this.el.object3D.parent.updateMatrixWorld();
       var parentMatrix = this.el.object3D.parent.matrixWorld.invert()
@@ -279,6 +384,8 @@ AFRAME.registerComponent('instanced-mesh', {
       matrix.compose(this.position, this.quaternion, this.scale);
       matrix.premultiply(parentMatrix);
     }
+
+    return matrix;
   },
 
   memberModified: function(event) {
@@ -299,19 +406,7 @@ AFRAME.registerComponent('instanced-mesh', {
       console.error(`Member ${id} not found for modification`)
     }
 
-    if (this.debug) {
-      console.log(`Modifying member ${id} at position ${index}`);
-      this.instancedMesh.getMatrixAt(index, this.matrix);
-
-      var position = new THREE.Vector3();
-      position.setFromMatrixPosition(this.matrix);
-      console.log(`Old position:${position.x} ${position.y} ${position.z}`);
-      position.setFromMatrixPosition(event.detail.member.object3D.matrix);
-      console.log(`New position:${position.x} ${position.y} ${position.z}`);
-    }
-
-    this.instancedMesh.setMatrixAt(index, event.detail.member.object3D.matrix);
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+    this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
   },
 
   memberRemoved: function(event) {
@@ -374,6 +469,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // still need to be shuffled up.
       var removed = 0;
 
+
       for (var ii = 0; ii < this.members; ii++) {
         // Check whether this one is to be removed (taking into account
         // index shuffling that has already taken place...)
@@ -399,15 +495,21 @@ AFRAME.registerComponent('instanced-mesh', {
           //console.log(`copying cell from ${matrixCursor + 1} to ${matrixCursor - removed + 1}`);
 
           if (matrixCursor + 1 < this.members) {
-            this.instancedMesh.getMatrixAt(matrixCursor + 1, this.matrix);
-            this.instancedMesh.setMatrixAt(matrixCursor - removed + 1, this.matrix);
+
+            this.instancedMeshes.forEach(mesh => {
+
+              mesh.getMatrixAt(matrixCursor + 1, this.matrix);
+              mesh.setMatrixAt(matrixCursor - removed + 1, this.matrix);
+            });
           }
         }
-
       }
       this.members -= removed;
-      this.instancedMesh.count = this.members;
-      this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+      this.instancedMeshes.forEach(mesh => {
+        mesh.count = this.members;
+        mesh.instanceMatrix.needsUpdate = true;
+      });
 
       // No further pending removals.
       this.membersToRemove = [];

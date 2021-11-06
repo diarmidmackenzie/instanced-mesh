@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+  </head>
+  <body>
+    <a-scene stats renderer="colorManagement:true">
+      <a-asset-item id="cell"
+        src="./assets/animal-cell/scene.gltf"
+        response-type="arraybuffer" crossorigin="anonymous">
+      </a-asset-item>
+
+      <a-entity id="rig" movement-controls>
+        <a-entity id="camera" camera position="0 1.6 0" look-controls>
+        </a-entity>
+      </a-entity>
+
+      <a-text position = "-8 -1 -6" color ="black"
+         value="A selection of animal cells
+         (a GLTF Model with 11 different meshes),
+         all different sizes and orientations."></a-text>
+
+      <a-entity id="mesh1"
+                gltf-model="#cell"
+                instanced-mesh></a-entity>
+
+      <a-entity id ="cell0" position = "-4 4 -6" rotation="0 10 0" scale="0.4 0.4 0.4" instanced-mesh-member="mesh:#mesh1"></a-entity>
+      <a-entity id ="cell1" position = "-2 -2 -8" rotation="0 20 0" scale="0.3 0.3 0.3" instanced-mesh-member="mesh:#mesh1"></a-entity>
+      <a-entity id ="cell2" position = "1 4 -6" rotation="0 30 0" scale="0.5 0.5 0.5" instanced-mesh-member="mesh:#mesh1"></a-entity>
+      <a-entity id ="cell3" position = "3 -1 -6" rotation="0 50 0" scale="1 1 1" instanced-mesh-member="mesh:#mesh1" ></a-entity>
+      <a-entity id ="cell4" position = "4 2 -6" rotation="0 -20 0" scale="0.5 0.5 0.5" instanced-mesh-member="mesh:#mesh1"></a-entity>
+      <a-entity id ="cell5" position = "6 1 -6" rotation="0 -90 0" scale="0.2 0.2 0.2" instanced-mesh-member="mesh:#mesh1"></a-entity>
+
+</a-scene>
+
+</body>
