@@ -255,6 +255,27 @@ This doesn't exist yet.  It's an anticipated component to facilitate cascading o
 
 
 
+## Multi-mesh GLTF models
+
+Some GLTF models consist of multiple meshes, each of which can have their own transform.
+
+To support instanced meshes for these models, we create a separate Instanced Mesh for each of these child meshes, and keep them all up to date.
+
+See examples:
+
+[3D Models Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models-multi-mesh.htm)
+
+[Movement Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement-multi-mesh.htm)
+
+
+
+Some known issues:
+
+- Applying transforms to the instanced-mesh entity itself won't give the results you'd expect.  Apply any transforms that are required to the instances (either directly, or via mixin).
+
+- Updates to instanced mesh properties (e.g. changes to capacity) are almost certainly bugged.
+- Add/remove function not yet working cleanly.
+
 ## Supported Features
 
 #### Supported Features - Tested

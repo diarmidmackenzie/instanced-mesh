@@ -1,0 +1,82 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <script src="./framed-cell.js"></script>
+    <script>
+    AFRAME.registerComponent('move-up', {
+
+      init: function() {
+        this.initialY = this.el.object3D.position.y;
+        this.up = true;
+        this.height = 1 + Math.random() * 2;
+      },
+
+      tick: function (time, timeDelta) {
+
+        if (this.up) {
+          // up
+           this.el.object3D.position.y += Math.min(timeDelta/1000, 1);
+           if (this.el.object3D.position.y - this.initialY > this.height) {
+             this.up = false;
+           }
+        }
+        else
+        {
+          // down
+          this.el.object3D.position.y -= Math.min(timeDelta/1000, 1);
+          if (this.el.object3D.position.y - this.initialY < 0) {
+            this.up = true;
+          }
+        }
+        this.el.emit("object3DUpdated");
+      }
+    });
+
+    </script>
+  </head>
+  <body>
+    <a-scene stats renderer="colorManagement:true">
+    <a-asset-item id="cell"
+      src="./assets/animal-cell/scene.gltf"
+      response-type="arraybuffer" crossorigin="anonymous">
+    </a-asset-item>
+
+    <a-entity id="rig" movement-controls>
+      <a-entity id="camera" camera position="0 1.6 0" look-controls>
+      </a-entity>
+    </a-entity>
+
+    <!-- wall of cells-->
+    <a-text position = "-5 4 -6" color ="black"
+       value="This should show an array of 5 columns, 3 rows.
+              All GLTF models of animal cells, with multiple components.
+              The top row move up & down independently of each other."></a-text>
+    <a-entity id="mesh1"
+              gltf-model="#cell"
+              instanced-mesh="capacity:15;debug:true"></a-entity>
+
+    <a-mixin id="shape1" scale="0.1 0.1 0.1" instanced-mesh-member="mesh:#mesh1"></a-mixin>
+
+    <a-entity id ="cell0" position = "-2 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell1" position = "-1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell2" position = "0 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell3" position = "1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell4" position = "2 0 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="cell5" position = "-2 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell6" position = "-1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell7" position = "0 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell8" position = "1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="cell9" position = "2 1 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="cell10" position = "-2 2 -6" mixin="shape1" move-up></a-entity>
+    <a-entity id ="cell11" position = "-1 2 -6" mixin="shape1" move-up></a-entity>
+    <a-entity id ="cell12" position = "0 2 -6" mixin="shape1" move-up></a-entity>
+    <a-entity id ="cell13" position = "1 2 -6" mixin="shape1" move-up></a-entity>
+    <a-entity id ="cell14" position = "2 2 -6" mixin="shape1" move-up></a-entity>
+
+</a-scene>
+
+</body>
