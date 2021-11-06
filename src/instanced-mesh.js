@@ -439,52 +439,56 @@ AFRAME.registerComponent('instanced-mesh', {
       // still need to be shuffled up.
       var removed = 0;
 
-      this.instancedMeshes.forEach(mesh => {
 
-        for (var ii = 0; ii < this.members; ii++) {
-          // Check whether this one is to be removed (taking into account
-          // index shuffling that has already taken place...)
-          // If so, increment the amount we are shuffling up by, which will
-          // lead to this entry being overwritten.
+      for (var ii = 0; ii < this.members; ii++) {
+        // Check whether this one is to be removed (taking into account
+        // index shuffling that has already taken place...)
+        // If so, increment the amount we are shuffling up by, which will
+        // lead to this entry being overwritten.
 
-          var matrixCursor = ii;
-          var membersCursor = ii - removed;
+        var matrixCursor = ii;
+        var membersCursor = ii - removed;
 
-          if (this.membersToRemove.includes(this.orderedMembersList[membersCursor])) {
-            //console.log(`Item to remove: ${this.orderedMembersList[membersCursor]} at position ${matrixCursor}`)
-            if (this.debug) {
-              console.log(`Removing member ${this.orderedMembersList[membersCursor]} at position ${membersCursor}`);
-            }
-            this.orderedMembersList.splice(membersCursor, 1);
-            removed++;
+        if (this.membersToRemove.includes(this.orderedMembersList[membersCursor])) {
+          //console.log(`Item to remove: ${this.orderedMembersList[membersCursor]} at position ${matrixCursor}`)
+          if (this.debug) {
+            console.log(`Removing member ${this.orderedMembersList[membersCursor]} at position ${membersCursor}`);
           }
-          // Now do the shuffle up.
-          // If we just incremented the count of removed elements, the current
-          // element will get overwritten.
-          // Else items will just get shuffled up.
-          if (removed > 0) {
-            //console.log(`copying cell from ${matrixCursor + 1} to ${matrixCursor - removed + 1}`);
+          this.orderedMembersList.splice(membersCursor, 1);
+          removed++;
+        }
+        // Now do the shuffle up.
+        // If we just incremented the count of removed elements, the current
+        // element will get overwritten.
+        // Else items will just get shuffled up.
+        if (removed > 0) {
+          //console.log(`copying cell from ${matrixCursor + 1} to ${matrixCursor - removed + 1}`);
 
-            if (matrixCursor + 1 < this.members) {
+          if (matrixCursor + 1 < this.members) {
+
+            this.instancedMeshes.forEach(mesh => {
 
               mesh.getMatrixAt(matrixCursor + 1, this.matrix);
               mesh.setMatrixAt(matrixCursor - removed + 1, this.matrix);
-            }
+            });
           }
-
         }
-        this.members -= removed;
+
+      }
+      this.members -= removed;
+
+      this.instancedMeshes.forEach(mesh => {
         mesh.count = this.members;
         mesh.instanceMatrix.needsUpdate = true;
-
-        // No further pending removals.
-        this.membersToRemove = [];
-
-        // Diags: Dump full matrix of x/y positions:
-        //for (var jj = 0; jj < this.members; jj++) {
-          //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
-        //}
       });
+      
+      // No further pending removals.
+      this.membersToRemove = [];
+
+      // Diags: Dump full matrix of x/y positions:
+      //for (var jj = 0; jj < this.members; jj++) {
+        //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
+      //}
 
       console.log("Removals done");
     }
