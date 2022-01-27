@@ -13,6 +13,7 @@ AFRAME.registerComponent('instanced-mesh', {
     this.members = 0;
     this.debug = this.data.debug;
     this.meshLoaded = false;
+    this.texturesLoaded = 0;
     this.eventQueue = [];
 
     // Bounding sphere used for frustrum culling
@@ -93,6 +94,29 @@ AFRAME.registerComponent('instanced-mesh', {
         this.update.call(this, this.data)
         })
         return;
+    }
+
+    // If there are textures to be loaded, wait for them all to load before
+    // proceeding.
+    if (this.el.components.material &&
+        this.el.components.material.shader &&
+        this.el.components.material.shader.materialSrcs) {
+
+      const textures = this.el.components.material.shader.materialSrcs
+      this.texturesToLoad = Object.keys(textures).length;
+
+      if (this.texturesToLoad !== this.texturesLoaded) {
+
+        // still textures to load.
+        this.el.sceneEl.addEventListener("materialtextureloaded", (e) => {
+          this.texturesLoaded++;
+          if (this.texturesToLoad === this.texturesLoaded) {
+            // All textures loaded - proceed.
+            this.update.call(this, this.data)
+          }          
+        })
+        return;
+      }
     }
 
     if (originalMesh.count > 0) {
