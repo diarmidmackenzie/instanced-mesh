@@ -91,6 +91,14 @@ Note: if your objects are not all in the same Frame of Reference as each other, 
 
 [Updates Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates-multi-mesh.html)
 
+#### Examples with Textures and other shader maps
+
+[Flat textures](https://diarmidmackenzie.github.io/instanced-mesh/tests/texture-example.html)
+
+[PBR (normal, displacement, ambient occlusion)](https://diarmidmackenzie.github.io/instanced-mesh/tests/pbr-example.html)
+
+[Env-Map](https://diarmidmackenzie.github.io/instanced-mesh/tests/env-map-example.html)
+
 ## Interface
 
 ### instanced-mesh
@@ -352,3 +360,12 @@ And [@kfarr](https://stackoverflow.com/users/5347747/kieran-f) helped me to disc
 
 I'm indebted to @bryik's A-Frame Layers component for ideas on how to handle layers configuration:
 https://github.com/bryik/aframe-layers-component
+
+The [snowball example](https://diarmidmackenzie.github.io/instanced-mesh/tests/pbr-example.html) uses these CC0-licensed textures from Katsukagi:
+https://3dtextures.me/2018/02/27/snow-002/
+
+The texture used in the [env-map spheres example](https://diarmidmackenzie.github.io/instanced-mesh/tests/env-map-example.html) is my own (from https://github.com/diarmidmackenzie/christmas-scene)
+
+
+
+The texture used on the [textured cubes example](https://diarmidmackenzie.github.io/instanced-mesh/tests/texture-example.html) re-uses a texture from this A-Frame example: https://aframe.io/examples/showcase/responsiveui/
