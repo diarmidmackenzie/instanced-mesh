@@ -102,18 +102,26 @@ AFRAME.registerComponent('instanced-mesh', {
         this.el.components.material.shader &&
         this.el.components.material.shader.materialSrcs) {
 
-      const textures = this.el.components.material.shader.materialSrcs
+      const material = this.el.components.material
+      const shader = material.shader
+      const textures = shader.materialSrcs
       this.texturesToLoad = Object.keys(textures).length;
+      if (shader.isLoadingEnvMap ||
+          material.material.envMap) {
+        this.texturesToLoad++;
+      }
 
-      if (this.texturesToLoad !== this.texturesLoaded) {
+      if (this.texturesToLoad !== this.texturesLoaded ||
+          shader.isLoadingEnvMap) {
 
         // still textures to load.
-        this.el.sceneEl.addEventListener("materialtextureloaded", (e) => {
+        this.el.addEventListener("materialtextureloaded", (e) => {
           this.texturesLoaded++;
-          if (this.texturesToLoad === this.texturesLoaded) {
+          if (this.texturesToLoad === this.texturesLoaded  &&
+              !shader.isLoadingEnvMap) {
             // All textures loaded - proceed.
             this.update.call(this, this.data)
-          }          
+          }
         })
         return;
       }

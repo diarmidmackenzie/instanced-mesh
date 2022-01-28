@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+
+  </head>
+  <body>
+    <a-scene stats renderer="colorManagement:true">
+      <a-assets>
+        <a-cubemap id="env">
+          <img src="./assets/environment-left.png">
+          <img src="./assets/environment-left.png">
+          <img src="./assets/environment-top.png">
+          <img src="./assets/environment-bottom.png">
+          <img src="./assets/environment-back.png">
+          <img src="./assets/environment-back.png">
+        </a-cubemap>
+      </a-assets>
+
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
+
+    <a-entity id="rig" movement-controls>
+      <a-entity id="camera" camera position="0 1.6 0" look-controls>
+      </a-entity>
+    </a-entity>
+
+    <!-- wall of blocks-->
+    <a-text position = "-5 4 -6" color ="black"
+       value="An example with objects with environment maps.
+              The (larger) single sphere below shows what all the blocks should look like.
+              (but they are scaled down by 0.5)"></a-text>
+    <a-entity id="mesh1"
+              geometry="primitive: sphere"
+              material="color:red;envMap:#env; metalness:1.0; roughness:0.0"
+              instanced-mesh="capacity:15"></a-entity>
+
+    <a-entity id="reference"
+              geometry="primitive: sphere"
+              material="color:red;envMap:#env; metalness:1.0; roughness:0.0"
+              position = "0 -2 -6"></a-entity>
+    <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block1" position = "-1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block2" position = "0 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block3" position = "1 0 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block4" position = "2 0 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="block5" position = "-2 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block6" position = "-1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block7" position = "0 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block8" position = "1 1 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block9" position = "2 1 -6" mixin="shape1"></a-entity>
+
+    <a-entity id ="block10" position = "-2 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block11" position = "-1 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block12" position = "0 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block13" position = "1 2 -6" mixin="shape1"></a-entity>
+    <a-entity id ="block14" position = "2 2 -6" mixin="shape1"></a-entity>
+
+</a-scene>
+
+</body>
