@@ -102,23 +102,14 @@ AFRAME.registerComponent('instanced-mesh', {
         this.el.components.material.shader &&
         this.el.components.material.shader.materialSrcs) {
 
-      const material = this.el.components.material
-      const shader = material.shader
-      const textures = shader.materialSrcs
-      this.texturesToLoad = Object.keys(textures).length;
-      if (shader.isLoadingEnvMap ||
-          material.material.envMap) {
-        this.texturesToLoad++;
-      }
+      this.countTexturesToLoad();
 
-      if (this.texturesToLoad !== this.texturesLoaded ||
-          shader.isLoadingEnvMap) {
+      if (this.texturesToLoad !== this.texturesLoaded) {
 
         // still textures to load.
         this.el.addEventListener("materialtextureloaded", (e) => {
           this.texturesLoaded++;
-          if (this.texturesToLoad === this.texturesLoaded  &&
-              !shader.isLoadingEnvMap) {
+          if (this.texturesToLoad === this.texturesLoaded) {
             // All textures loaded - proceed.
             this.update.call(this, this.data)
           }
@@ -179,6 +170,23 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // process any events pending on this mesh.
     this.processQueuedEvents();
+  },
+
+  countTexturesToLoad: function () {
+
+    const material = this.el.components.material
+    const shader = material.shader
+    const textures = shader.materialSrcs
+
+    // start with materialSrcs
+    this.texturesToLoad = Object.keys(shader.materialSrcs).length;
+
+    // add in other shader textures that may be needed.
+    this.texturesToLoad += shader.ambientOcclusionTextureSrc ? 1 : 0;
+    this.texturesToLoad += shader.displacementTextureSrc ? 1 : 0;
+    this.texturesToLoad += shader.normalTextureSrc ? 1 : 0;
+    this.texturesToLoad += (shader.isLoadingEnvMap ||
+                            material.material.envMap) ? 1 : 0;
   },
 
   increaseInstancedMeshCapacity: function() {
