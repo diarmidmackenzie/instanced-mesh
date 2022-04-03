@@ -5,7 +5,7 @@ AFRAME.registerComponent('instanced-mesh', {
       fccenter:   {type: 'vec3'},
       positioning: {type: 'string', default: "local"},
       debug:      {type: 'boolean', default: false},
-      layers:     {type: 'string', default: ""}
+      layers:     {type: 'string', default: ""},      
   },
 
   init: function () {
@@ -48,6 +48,11 @@ AFRAME.registerComponent('instanced-mesh', {
       memberAdded: this.memberAdded.bind(this),
       memberModified: this.memberModified.bind(this),
       memberRemoved: this.memberRemoved.bind(this),
+      raycasterIntersected: this.raycasterIntersected.bind(this),
+      raycasterIntersectedCleared: this.raycasterIntersectedCleared.bind(this),
+      mouseEnter: this.mouseEnter.bind(this),
+      mouseLeave: this.mouseLeave.bind(this),
+      mouseClick: this.mouseClick.bind(this),
     };
     this.attachEventListeners();
 
@@ -62,6 +67,11 @@ AFRAME.registerComponent('instanced-mesh', {
     this.el.addEventListener('memberAdded', this.listeners.memberAdded, false);
     this.el.addEventListener('memberModified', this.listeners.memberModified, false);
     this.el.addEventListener('memberRemoved', this.listeners.memberRemoved, false);
+    this.el.addEventListener('raycaster-intersected', this.listeners.raycasterIntersected, false);
+    this.el.addEventListener('raycaster-intersected-cleared', this.listeners.raycasterIntersectedCleared, false);
+    this.el.addEventListener('mouseenter', this.listeners.mouseEnter, false);
+    this.el.addEventListener('mouseleave', this.listeners.mouseLeave, false);
+    this.el.addEventListener('click', this.listeners.mouseClick, false);
   },
 
   update: function () {
@@ -561,7 +571,49 @@ AFRAME.registerComponent('instanced-mesh', {
 
       console.log("Removals done");
     }
-  }
+  },
+
+  memberFromEvent(evt) {
+
+    // some events have the intersection in them, others just offer a getIntersection function.
+    const intersection = evt.detail.intersection || evt.detail.getIntersection(this.el);
+    const instanceId = intersection.instanceId;
+    const targetId = this.orderedMembersList[instanceId]
+    const target = document.getElementById(targetId);
+
+    return target
+  },
+
+  raycasterIntersected (evt) {
+    const target = this.memberFromEvent(evt)
+    
+    target.emit('raycaster-intersected', {intersection: evt.detail.intersection})    
+  },
+
+  raycasterIntersectedCleared (evt) {
+    // Not working - raycaster-intersected-cleared contains no data about which instanceId was intersected.
+    //const target = this.memberFromEvent(evt)
+    
+    //target.emit('raycaster-intersected-cleared', evt.detail)
+  },
+
+  mouseEnter (evt) {
+    const target = this.memberFromEvent(evt)
+    target.emit('mouseenter', evt.detail)
+    //document.querySelector('[cursor]').emit('mouseenter', evt.detail)
+  },
+
+  mouseLeave (evt) {
+    // Not working - mouseleave contains no data about which instanceId was intersected.
+    //const target = this.memberFromEvent(evt)
+
+    //target.emit('mouseleave', evt.detail)    
+  },
+
+  mouseClick (evt) {
+    const target = this.memberFromEvent(evt)
+    target.emit('click', evt.detail)    
+  },
 
 });
 
