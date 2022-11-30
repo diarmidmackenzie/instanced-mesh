@@ -57,6 +57,10 @@ AFRAME.registerComponent('instanced-mesh', {
     this.debugMatrix = new THREE.Matrix4();
     this.componentMatrix = new THREE.Matrix4();
 
+    // stored inverse of the parent's matrixWorld (to save re-calculations)
+    // code that uses this should intelligently update it when necessary.
+    this.parentWorldMatrixInverse = this.el.object3D.parent.matrixWorld.clone()
+    this.parentWorldMatrixInverse.invert()
   },
 
   attachEventListeners: function() {
@@ -359,9 +363,15 @@ AFRAME.registerComponent('instanced-mesh', {
   // For a given index position, across all instanced meshes, update the
   // matrices to match the transform of the member object
   // (provided in the object3D)
-  updateMatricesFromMemberObject(object3D, index) {
+  updateMatricesFromMemberObject(object3D, index, auto) {
 
-    this.matrix = this.matrixFromMemberObject(object3D);
+    let matrix
+    if (auto) {
+      matrix = this.matrixFromMemberObjectAuto(object3D);
+    }
+    else {
+      matrix = this.matrixFromMemberObjectManual(object3D);
+    }
 
     const debug = this.debug;
     const componentMatrix = this.componentMatrix;
@@ -380,8 +390,8 @@ AFRAME.registerComponent('instanced-mesh', {
         console.log(`New position:${position.x} ${position.y} ${position.z}`);
       }
 
-      componentMatrix.multiplyMatrices(this.matrix, this.componentMatrices[componentIndex]);
-      mesh.setMatrixAt(index, this.componentMatrix);
+      componentMatrix.multiplyMatrices(matrix, this.componentMatrices[componentIndex]);
+      mesh.setMatrixAt(index, componentMatrix);
 
       mesh.instanceMatrix.needsUpdate = true;
     });
@@ -389,40 +399,46 @@ AFRAME.registerComponent('instanced-mesh', {
 
   // Get the matrix to add to an instanced mesh from an object 3D
   // allowing for positioning style (local or world)
-  matrixFromMemberObject: function(object3D) {
-
-    // matrix used for working...
-    const matrix = this.matrix;
+  // This version used for Manual updates - it ensures data is up-to-date
+  // for computations.
+  matrixFromMemberObjectManual: function(object3D) {
 
     if (this.localPositioning) {
 
-      // Pull object3D details to construct matrix.  Note that the
-      // matrix itself can't be relied upon to have been correctly intialized,
-      // which is why we don't use it directly.
-      // !! 24/7/21 - I'd like to understand this better...
-      //              could be a lot slicker if we could assume object3D matrix
-      //              is fully initialized...
-      matrix.compose(object3D.position,
-                     object3D.quaternion,
-                     object3D.scale);
+      object3D.updateMatrix()
+      return object3D.matrix;
     }
     else
     {
-      // We now have world co-ordinates of the mesh member.
-      // Just need to transform into the frame of reference of the instanced
-      // mesh itself.
-      // As follows:
-      // Make sure parent MatrixWorld is up to date.
-      // Take it's inverse, and pre-multiply by it.
-      // This way, when the parent MatrixWorld is applied to the object
-      // it will end up back where we wanted it.
-      //this.el.object3D.parent.updateMatrixWorld();
-      var parentMatrix = this.el.object3D.parent.matrixWorld.invert()
-
-      matrix.multiplyMatrices(parentMatrix, object3D.matrixWorld) 
+      const parent = this.el.object3D.parent
+      const parentInverse = this.parentWorldMatrixInverse
+      parent.updateMatrixWorld();
+      parentInverse.copy(parent.matrixWorld)
+      parentInverse.invert()
+      
+      // matrix used for working...
+      const matrix = this.matrix
+      matrix.multiplyMatrices(parentInverse, object3D.matrixWorld) 
+      return matrix;
     }
+  },
 
-    return matrix;
+  // Get the matrix to add to an instanced mesh from an object 3D
+  // allowing for positioning style (local or world)
+  // This version used for Auto updates - it does not ensures data is up-to-date
+  // for computations, based on the fact that the data will be updated again the 
+  // in the next frame.
+  matrixFromMemberObjectAuto: function(object3D) {
+
+    if (this.localPositioning) {
+      return object3D.matrix;
+    }
+    else
+    {
+      const matrix = this.matrix;
+      matrix.multiplyMatrices(this.parentWorldMatrixInverse, object3D.matrixWorld) 
+      return matrix;
+    }
   },
 
   memberModified: function(event) {
@@ -560,6 +576,13 @@ AFRAME.registerComponent('instanced-mesh', {
     }
 
     if (this.data.updateMode === "auto") {
+
+      // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
+      const parent = this.el.object3D.parent
+      const parentInverse = this.parentWorldMatrixInverse
+      parent.updateMatrixWorld();
+      parentInverse.copy(parent.matrixWorld)
+      parentInverse.invert()
 
       const list = this.orderedMembersList
       const members = this.members
