@@ -3,6 +3,7 @@
     <!-- Rotate blocks at high scale.
          2.5k blocks in total
          50 % rotating.
+         update mode set to automatic.
          -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
@@ -15,7 +16,7 @@
     const ROTATION_RATE = 0.001;
 
     // percentage of blocks that are rotating.
-    const ROTATION_PERCENTAGE = 50;
+    const ROTATION_PERCENTAGE = 100;
 
     // Whether to use Instanced Mesh (turn on/off for comparison)
     const USE_IM = true;
@@ -60,7 +61,6 @@
         this.rotatingBlocksArray.forEach(item => {
 
           item.object3D.rotation.y += ROTATION_RATE * timeDelta;
-          item.emit("object3DUpdated");
         });
       }
     });
@@ -76,21 +76,21 @@
 
       <!-- wall of blocks-->
       <a-text position = "-4 -2.2 -7" color ="black"
-         value="This is a large array of mixed color blocks.  50% of them should be slowly rotating (1 rad/second).
-                This page uses 'manual' update mode.
-                With this number of objects changing every frame, this performs significantly worse than 'auto' update mode."></a-text>
+      value="This is a large array of mixed color blocks, with 100% of them slowly rotating (1 rad/second).
+             This page uses 'auto' update mode, and performs considerably better than the equivalent page
+             running 'manual' mode."></a-text>
       <a-entity id="mesh1"
                 framed-block="facecolor: yellow; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"
                 position = "0 0 0"
-                instanced-mesh="capacity:10000"></a-entity>
+                instanced-mesh="capacity:10000; updateMode: auto"></a-entity>
       <a-entity id="mesh2"
                 framed-block="facecolor: green; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"
                 position = "0 0 0"
-                instanced-mesh="capacity:10000"></a-entity>
+                instanced-mesh="capacity:10000; updateMode: auto"></a-entity>
       <a-entity id="mesh3"
                 framed-block="facecolor: blue; framecolor: black; height:0.1;width:0.1;depth:0.1;frame:0.01"
                 position = "0 0 0"
-                instanced-mesh="capacity:10000"></a-entity>
+                instanced-mesh="capacity:10000; updateMode: auto"></a-entity>
       <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1"></a-mixin>
       <a-mixin id="shape2" instanced-mesh-member="mesh:#mesh2"></a-mixin>
       <a-mixin id="shape3" instanced-mesh-member="mesh:#mesh3"></a-mixin>

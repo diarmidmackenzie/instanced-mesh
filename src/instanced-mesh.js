@@ -5,7 +5,8 @@ AFRAME.registerComponent('instanced-mesh', {
       fccenter:   {type: 'vec3'},
       positioning: {type: 'string', default: "local"},
       debug:      {type: 'boolean', default: false},
-      layers:     {type: 'string', default: ""}
+      layers:     {type: 'string', default: ""},
+      updateMode: {type: 'string', default: "manual", oneOf: ["auto", "manual"]}
   },
 
   init: function () {
@@ -311,7 +312,7 @@ AFRAME.registerComponent('instanced-mesh', {
       return;
     }
 
-    const memberID = event.detail.member.id;
+    const member = event.detail.member;
     var index;
 
     // First, choose the index for the new member.
@@ -320,13 +321,13 @@ AFRAME.registerComponent('instanced-mesh', {
     if (this.membersToRemove.length > 0) {
 
       // Grab the index, and remove this index from the list of pending deletions.
-      const id = this.membersToRemove[0];
-      index = this.orderedMembersList.findIndex(x => (x == id));
+      const member = this.membersToRemove[0];
+      index = this.orderedMembersList.findIndex(x => (x == member));
 
       this.membersToRemove.splice(0, 1);
-      this.orderedMembersList[index] = memberID;
+      this.orderedMembersList[index] = event.detail.member;
     }
-    // 2. If nothing is  pending deletion, so just add to the end of the list as
+    // 2. If nothing is pending deletion, so just add to the end of the list as
     //    a new member.
     else
     {
@@ -338,7 +339,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
       index = this.members;
       this.members++;
-      this.orderedMembersList.push(memberID);
+      this.orderedMembersList.push(member);
     }
 
     this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
@@ -361,9 +362,11 @@ AFRAME.registerComponent('instanced-mesh', {
 
     this.matrix = this.matrixFromMemberObject(object3D);
 
+    const debug = this.debug;
+    const componentMatrix = this.componentMatrix;
     this.instancedMeshes.forEach((mesh, componentIndex) => {
 
-      if (this.debug) {
+      if (debug) {
         //console.log(`Modifying member ${id} at position ${index}`);
         console.log(`Setting matrix for component index ${componentIndex}`)
 
@@ -376,9 +379,7 @@ AFRAME.registerComponent('instanced-mesh', {
         console.log(`New position:${position.x} ${position.y} ${position.z}`);
       }
 
-      this.componentMatrix = this.matrix.clone();
-
-      this.componentMatrix.multiply(this.componentMatrices[componentIndex]);
+      componentMatrix.multiplyMatrices(this.matrix, this.componentMatrices[componentIndex]);
       mesh.setMatrixAt(index, this.componentMatrix);
 
       mesh.instanceMatrix.needsUpdate = true;
@@ -406,10 +407,6 @@ AFRAME.registerComponent('instanced-mesh', {
     }
     else
     {
-      object3D.getWorldPosition(this.position);
-      object3D.getWorldQuaternion(this.quaternion);
-      object3D.getWorldScale(this.scale);
-
       // We now have world co-ordinates of the mesh member.
       // Just need to transform into the frame of reference of the instanced
       // mesh itself.
@@ -418,11 +415,10 @@ AFRAME.registerComponent('instanced-mesh', {
       // Take it's inverse, and pre-multiply by it.
       // This way, when the parent MatrixWorld is applied to the object
       // it will end up back where we wanted it.
-      this.el.object3D.parent.updateMatrixWorld();
+      //this.el.object3D.parent.updateMatrixWorld();
       var parentMatrix = this.el.object3D.parent.matrixWorld.invert()
 
-      matrix.compose(this.position, this.quaternion, this.scale);
-      matrix.premultiply(parentMatrix);
+      matrix.multiplyMatrices(parentMatrix, object3D.matrixWorld) 
     }
 
     return matrix;
@@ -439,8 +435,8 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Not yet thought about transitations between frames of reference
     // Just assume all in same FOR for now..
-    const id = event.detail.member.id;
-    const index = this.orderedMembersList.findIndex(x => (x == id));
+    const member = event.detail.member;
+    const index = this.orderedMembersList.findIndex(x => (x === member));
 
     if (index == -1) {
       console.error(`Member ${id} not found for modification`)
@@ -465,7 +461,7 @@ AFRAME.registerComponent('instanced-mesh', {
     // at the next tick, by which time we may have collected a number of
     // deletions to handle all together.
     //console.log("Removing mesh member with ID:" + event.detail.member.id);
-    this.membersToRemove.push(event.detail.member.id);
+    this.membersToRemove.push(event.detail.member);
     if (this.debug) {
       console.log(`Member ${event.detail.member.id} queued up for removal`);
     }
@@ -502,7 +498,7 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   tick: function (time, timeDelta) {
-
+    
     if (this.membersToRemove.length > 0) {
       // We have members to Remove.
       // We need to iterate through all members, as those that aren't removed
@@ -561,8 +557,20 @@ AFRAME.registerComponent('instanced-mesh', {
 
       console.log("Removals done");
     }
-  }
 
+    if (this.data.updateMode === "auto") {
+
+      const list = this.orderedMembersList
+      const members = this.members
+      for (let ii = 0; ii < members; ii++) {
+        const object = list[ii].object3D
+        
+        if (object) {
+          this.updateMatricesFromMemberObject(object, ii);
+        }
+      }; 
+    }
+  }
 });
 
 AFRAME.registerComponent('instanced-mesh-member', {
