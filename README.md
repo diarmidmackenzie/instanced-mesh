@@ -39,11 +39,22 @@ The basic set-up is as follows:
 
 Both the instanced-mesh entity and the member entities *must* all have ids configured.
 
+Sample code:
+
+```
+    <a-box id="mesh1" color="red" instanced-mesh>
+    </a-box>
+    <a-entity id="block1" position="-2 0 -2" instanced-mesh-member="mesh:#mesh1">
+    </a-entity>
+    <a-entity id="block1" position="2 0 -2" instanced-mesh-member="mesh:#mesh1">
+    </a-entity>
+```
+
 Repeat the above for each type of object that you want to have multiple instances of.
 
 See the rest of this doc for more details, but this should be enough to get you started...
 
-Note: if your objects are not all in the same Frame of Reference as each other, you'll need to take more care - read on below, specifically you probably need to set positioning to "world".
+Note: if your objects are not all in the same Frame of Reference as each other (i.e. they have different parents), you'll need to take more care - read on below, specifically you probably need to set positioning to "world" on the `instanced-mesh`component.
 
 ## Examples
 
