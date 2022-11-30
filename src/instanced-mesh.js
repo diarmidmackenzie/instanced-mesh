@@ -325,7 +325,7 @@ AFRAME.registerComponent('instanced-mesh', {
       index = this.orderedMembersList.findIndex(x => (x == member));
 
       this.membersToRemove.splice(0, 1);
-      this.orderedMembersList[index] = event.detail.member;
+      this.orderedMembersList[index] = member;
     }
     // 2. If nothing is pending deletion, so just add to the end of the list as
     //    a new member.
@@ -334,6 +334,7 @@ AFRAME.registerComponent('instanced-mesh', {
       if (this.members > this.capacity) {
         // Don't go over capacity.
         console.warn(`Member not added to mesh ${this.el.id}.  Exceeded configured capacity of ${this.capacity}`)
+        console.warn(`To fix, set 'capacity' property on instanced-mesh attribute on entity:${this.el.id} (default is 100)`)
         return;
       }
 
@@ -342,7 +343,7 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(member);
     }
 
-    this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
+    this.updateMatricesFromMemberObject(member.object3D, index);
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
