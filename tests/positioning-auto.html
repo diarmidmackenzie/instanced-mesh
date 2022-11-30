@@ -28,11 +28,11 @@
               these frames of reference are all ignored.
               (Try turning off 'world' position on one or more
               meshes and you'll see everything messes up!)
-              This version of the test uses 'manual' update mode."></a-text>
+              This version of the test uses 'auto' update mode."></a-text>
     <a-entity id="mesh1"
               framed-block="facecolor: yellow; framecolor: black"
               position = "0 0 0"
-              instanced-mesh="capacity:5;positioning:world"></a-entity>
+              instanced-mesh="capacity:5;positioning:world; updateMode: auto"></a-entity>
     <a-entity id="offset-mesh2"
               position = "1 2 3"
               scale = "1 2 3"
@@ -40,7 +40,7 @@
       <a-entity id="mesh2"
                 framed-block="facecolor: yellow; framecolor: black"
                 position = "0 0 0"
-                instanced-mesh="capacity:5;positioning:world"></a-entity>
+                instanced-mesh="capacity:5;positioning:world; updateMode: auto"></a-entity>
       </a-entity>
     </a-entity>
     <a-entity id="offset-mesh3"
@@ -48,7 +48,7 @@
       <a-entity id="mesh3"
                 framed-block="facecolor: yellow; framecolor: black"
                 position = "0 0 0"
-                instanced-mesh="capacity:5;positioning:world"></a-entity>
+                instanced-mesh="capacity:5;positioning:world; updateMode: auto"></a-entity>
     </a-entity>
     <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block1" position = "-1 0 -6" mixin="shape2"></a-entity>
