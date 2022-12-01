@@ -40,14 +40,15 @@ AFRAME.registerComponent('pinboard', {
       const createPin = (x, y, z, yRot) => {
         const pin = document.createElement('a-entity');
         pin.id = Math.random().toString(36).substring(2)
-        pin.setAttribute('instanced-mesh-member', 'mesh: #pin-mesh')
+        pin.setAttribute('instanced-mesh-member', 'mesh: #pin-mesh; memberMesh: true')
         if (this.data.physics === "ammo") {
           pin.setAttribute('ammo-body', 'type:static')
           // fit: auto not working yet...
           pin.setAttribute('ammo-shape', 'type:box; fit:manual; halfExtents: 0.05 0.5 0.05')
         }
         else if (this.data.physics === "cannon") {
-          pin.setAttribute('static-body', '')
+          // shape: auto not working yet...
+          pin.setAttribute('static-body', 'shape: box; halfExtents: 0.05 0.5 0.05')
         }
         else {
           pin.setAttribute('physx-body', 'type:static')
