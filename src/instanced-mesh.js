@@ -366,7 +366,7 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(member);
     }
 
-    this.updateMatricesFromMemberObject(member.object3D, index);
+    this.updateMatricesFromMemberObject(member.object3D, index, false);
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
@@ -479,7 +479,7 @@ AFRAME.registerComponent('instanced-mesh', {
       console.error(`Member ${id} not found for modification`)
     }
 
-    this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
+    this.updateMatricesFromMemberObject(event.detail.member.object3D, index, false);
   },
 
   memberRemoved: function(event) {
@@ -613,7 +613,7 @@ AFRAME.registerComponent('instanced-mesh', {
         const object = list[ii].object3D
         
         if (object) {
-          this.updateMatricesFromMemberObject(object, ii);
+          this.updateMatricesFromMemberObject(object, ii, true);
         }
       }; 
     }
@@ -685,14 +685,19 @@ AFRAME.registerComponent('instanced-mesh-member', {
     if (this.data.memberMesh && !this.el.getObject3D('mesh'))
     {
       const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
-      if (originalMesh) {
-        const newMesh = originalMesh.clone()
+
+      function setMesh(mesh) {
+        const newMesh = mesh.clone()
         newMesh.visible = false
         this.el.setObject3D('mesh', newMesh)
       }
+
+      if (originalMesh) {
+        setMesh(originalMesh)
+      }
       else {
         this.data.mesh.addEventListener('model-loaded', e => {
-          this.update.call(this, this.data)
+          setMesh(this.data.mesh.components['instanced-mesh'].originalMesh)
         });
       }
     }
