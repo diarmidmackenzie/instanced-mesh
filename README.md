@@ -80,6 +80,8 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Positioning (handling diverse frames of reference)](https://diarmidmackenzie.github.io/instanced-mesh/tests/positioning.html)
 
+[Positioning, with "auto" update mode](https://diarmidmackenzie.github.io/instanced-mesh/tests/positioning-auto.html)
+
 [Different Scale Attributes](https://diarmidmackenzie.github.io/instanced-mesh/tests/scale-attribute.html)
 
 #### Scaling capabilities of instanced meshes...
@@ -88,7 +90,9 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Rotation at High Scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/rotation-high-scale.html)
 
-[Updates](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates.html)
+[Rotation at High Scale, with "auto" update mode](https://diarmidmackenzie.github.io/instanced-mesh/tests/rotation-high-scale-auto.html)
+
+[Capacity Updates](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates.html)
 
 #### Examples with Multi-mesh GLTF models
 
@@ -98,7 +102,7 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Add & Remove Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/add-remove-multi-mesh.html)
 
-[Updates Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates-multi-mesh.html)
+[Capacity Updates Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates-multi-mesh.html)
 
 #### Examples with Textures and other shader maps
 
@@ -107,6 +111,10 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 [PBR (normal, displacement, ambient occlusion)](https://diarmidmackenzie.github.io/instanced-mesh/tests/pbr-example.html)
 
 [Env-Map](https://diarmidmackenzie.github.io/instanced-mesh/tests/env-map-example.html)
+
+#### Raycasting & Physics
+
+[Raycasting](https://diarmidmackenzie.github.io/instanced-mesh/tests/raycasting.html)
 
 ## Interface
 
@@ -149,10 +157,11 @@ As per above, this entity should be in the same Frame of Reference as the mesh t
 
 Configuration as follows:
 
-| Property | Type     | Explanation                                                  | Default |
-| -------- | -------- | ------------------------------------------------------------ | ------- |
-| mesh     | selector | A selector for the mesh that this entity is to be a member of. |         |
-| debug    | boolean  | enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.<br />For debug logs to be useful, it is recommended to configure IDs on the instance mesh member entities, as well as the mesh entity itself. | false   |
+| Property   | Type     | Explanation                                                  | Default |
+| ---------- | -------- | ------------------------------------------------------------ | ------- |
+| mesh       | selector | A selector for the mesh that this entity is to be a member of. |         |
+| debug      | boolean  | enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.<br />For debug logs to be useful, it is recommended to configure IDs on the instance mesh member entities, as well as the mesh entity itself. | false   |
+| memberMesh | boolean  | creates an invisible mesh for each member.  This can be useful for raycasting or physics body shape configuration on instanced Mesh members. | false   |
 
 
 
@@ -270,6 +279,27 @@ On the member entity:
 - Direct updates to object3D.matrix (position, rotation or scale) - mus be followed by an object3DUpdated event if not in "auto" update mode.
 
 
+
+## Physics & Raycasting
+
+To support physics and raycasting on instanced meshes, we provide the option to retain an invisible mesh for some or all mesh members, using the `memberMesh` option on the `instanced-mesh-member` component.
+
+When this option is enabled on a mesh member, an invisible mesh is configured on the member, corresponding to its appearance as rendered in the instanced mesh.
+
+This is not used for rendering, and so has no impact on draw calls or rendering costs, which remain highly efficient.
+
+Typical uses for this are:
+
+- For raycasting.  Since raycasting works against invisible objects, when `memberMesh` is configured on an instanced mesh member, it can be raycasted against just like any other element.
+- For physics body configuration.  Physics engines like [aframe-physics-system](https://github.com/c-frame/aframe-physics-system) and [physx](https://github.com/c-frame/physx) typically derive physics body shapes automatically from an entity's mesh.  When using instancing, this same functionality can be made available by configuring `memberMesh` on an instanced mesh member.
+
+[THREE.js InstancedMesh](https://threejs.org/docs/#api/en/objects/InstancedMesh) does support raycasting directly against the instanced mesh.  That functionality is not used by this implementation for a couple of reasons:
+
+- It doesn't offer any significant performance benefit, since raycasting still has to check against every triangle in every member of the instance mesh.
+
+- It reduces flexibility: raycasting can be enabled/disabled only at the scope of the whole mesh, rather than being enabled/disabled on a per-member basis.
+
+  
 
 ## Design Considerations
 
