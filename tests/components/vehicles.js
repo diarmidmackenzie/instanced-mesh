@@ -21,7 +21,9 @@ AFRAME.registerComponent('road', {
 
     const vehicle = document.createElement('a-entity')
     vehicle.setAttribute("id", `${this.el.id}-vehicle-${index}`)
-    vehicle.setAttribute("instanced-mesh-member", "mesh:#car-instanced-mesh")
+    // memberMesh set to "true" - not actually needed for this example, but handy additional test coverage
+    // for a setting that has been problematic with GLTFs at scale...
+    vehicle.setAttribute("instanced-mesh-member", "mesh:#car-instanced-mesh; memberMesh: true")
     vehicle.setAttribute("z-movement", {speed: this.data.speed,
                                         loopLower: -roadLength/2,
                                         loopUpper: roadLength/2})

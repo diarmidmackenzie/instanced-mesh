@@ -89,6 +89,9 @@ AFRAME.registerComponent('instanced-mesh', {
         break;
     }
 
+    // store off whether we are in auto mode, for fast checking.
+    this.autoMode = (this.data.updateMode === "auto")
+
     // Possible we are waiting for a GLTF model to load.  If so, defer processing...
     // !! We have a bug where using a geometry where that is specified on the
     // object *after* instanced-mesh.  This component gets initialized first but there
@@ -169,6 +172,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // Useful for generating per-member meshes for physics/raycasting.
       // (see instanced-mesh-member 'memberMesh' option)
       this.originalMesh = previousMesh;
+      this.el.emit("original-mesh-ready")
       previousMesh.visible = false;
 
       // set the Object3D Map to point to the first instanced mesh.
@@ -366,7 +370,7 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(member);
     }
 
-    this.updateMatricesFromMemberObject(member.object3D, index, false);
+    this.updateMatricesFromMemberObject(member.object3D, index, this.autoMode);
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
@@ -393,7 +397,7 @@ AFRAME.registerComponent('instanced-mesh', {
     }
 
     // don't output console logs for matrix updates in auto mode - too verbose.
-    const debug = (this.debug && this.data.updateMode !== "auto")
+    const debug = (this.debug && !this.autoMode)
     const componentMatrix = this.componentMatrix;
     this.instancedMeshes.forEach((mesh, componentIndex) => {
 
@@ -479,7 +483,7 @@ AFRAME.registerComponent('instanced-mesh', {
       console.error(`Member ${id} not found for modification`)
     }
 
-    this.updateMatricesFromMemberObject(event.detail.member.object3D, index, false);
+    this.updateMatricesFromMemberObject(event.detail.member.object3D, index, this.autoMode);
   },
 
   memberRemoved: function(event) {
@@ -598,7 +602,7 @@ AFRAME.registerComponent('instanced-mesh', {
       console.log("Removals done");
     }
 
-    if (this.data.updateMode === "auto") {
+    if (this.autoMode) {
 
       // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
       const parent = this.el.object3D.parent
@@ -685,18 +689,19 @@ AFRAME.registerComponent('instanced-mesh-member', {
     if (this.data.memberMesh && !this.el.getObject3D('mesh'))
     {
       const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
+      const el = this.el
 
       function setMesh(mesh) {
         const newMesh = mesh.clone()
         newMesh.visible = false
-        this.el.setObject3D('mesh', newMesh)
+        el.setObject3D('mesh', newMesh)
       }
 
       if (originalMesh) {
         setMesh(originalMesh)
       }
       else {
-        this.data.mesh.addEventListener('model-loaded', e => {
+        this.data.mesh.addEventListener('original-mesh-ready', e => {
           setMesh(this.data.mesh.components['instanced-mesh'].originalMesh)
         });
       }
