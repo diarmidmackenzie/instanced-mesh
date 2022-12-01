@@ -47,8 +47,7 @@ AFRAME.registerComponent('pinboard', {
         pin.setAttribute('instanced-mesh-member', 'mesh: #pin-mesh; memberMesh: true')
         if (this.data.physics === "ammo") {
           pin.setAttribute('ammo-body', 'type:static')
-          // fit: auto not working yet...
-          pin.setAttribute('ammo-shape', 'type:box; fit:manual; halfExtents: 0.05 0.5 0.05')
+          pin.setAttribute('ammo-shape', 'type:box; fit:all')
         }
         else if (this.data.physics === "cannon") {
           pin.setAttribute('static-body', '')
