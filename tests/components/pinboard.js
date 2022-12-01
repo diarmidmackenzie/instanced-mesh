@@ -1,3 +1,5 @@
+ballCounter = 0;
+
 // creates a pinboard height x width, + 2m at top & bottom, laid flat.
 AFRAME.registerComponent('pinboard', {
 
@@ -38,10 +40,11 @@ AFRAME.registerComponent('pinboard', {
       const createPin = (x, y, z, yRot) => {
         const pin = document.createElement('a-entity');
         pin.id = Math.random().toString(36).substring(2)
-        pin.setAttribute('instanced-mesh-member', 'mesh: #pin-mesh; memberMesh: true')
+        pin.setAttribute('instanced-mesh-member', 'mesh: #pin-mesh')
         if (this.data.physics === "ammo") {
           pin.setAttribute('ammo-body', 'type:static')
-          pin.setAttribute('ammo-shape', 'type:box;fit:all')
+          // fit: auto not working yet...
+          pin.setAttribute('ammo-shape', 'type:box; fit:manual; halfExtents: 0.05 0.5 0.05')
         }
         else if (this.data.physics === "cannon") {
           pin.setAttribute('static-body', '')
@@ -55,7 +58,6 @@ AFRAME.registerComponent('pinboard', {
 
         return pin
       }
-      
 
       this.base = createBox(width, 1, height + 4, 0, -0.5, 0, 'grey', 0)
       createBox(0.1, 2, height + 4, width / 2 + 0.05, 0, 0, 'grey', 0)
@@ -68,7 +70,6 @@ AFRAME.registerComponent('pinboard', {
               createPin(jj - width / 2  + even / 2 + 0.75,
                         0.5,
                         ii - height / 2 + 0.5,
-                        'black',
                         Math.PI / 4)
           }
       }
@@ -136,7 +137,9 @@ AFRAME.registerComponent('ball-recycler', {
       const { height, depth, width } = this.data
       const pos = this.el.object3D.position
 
-      const ball = document.createElement('a-sphere')
+      const ball = document.createElement('a-entity')
+      ball.id = `ball-${ballCounter}`
+      ballCounter++
           
       ball.setAttribute('dynamic-ball', {yKill: this.data.yKill,
                                          physics: this.data.physics})
