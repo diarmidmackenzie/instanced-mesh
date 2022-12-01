@@ -22,7 +22,7 @@ You can download it and include it like this:
 Or via JSDelivr CDN (check the releases in the repo for the best version number to use)
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.5.0/src/instanced-mesh.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.6.0/src/instanced-mesh.min.js"></script>
 ```
 
 Or available on npm as aframe-instanced-mesh:
