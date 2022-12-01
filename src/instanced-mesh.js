@@ -331,6 +331,10 @@ AFRAME.registerComponent('instanced-mesh', {
       return;
     }
 
+    if (this.debug) {
+      console.log(`Member ${event.detail.member.id} to be added`);
+    }
+
     const member = event.detail.member;
     var index;
 
@@ -340,8 +344,8 @@ AFRAME.registerComponent('instanced-mesh', {
     if (this.membersToRemove.length > 0) {
 
       // Grab the index, and remove this index from the list of pending deletions.
-      const member = this.membersToRemove[0];
-      index = this.orderedMembersList.findIndex(x => (x == member));
+      const memberToRemove = this.membersToRemove[0];
+      index = this.orderedMembersList.findIndex(x => (x == memberToRemove));
 
       this.membersToRemove.splice(0, 1);
       this.orderedMembersList[index] = member;
@@ -388,7 +392,8 @@ AFRAME.registerComponent('instanced-mesh', {
       matrix = this.matrixFromMemberObjectManual(object3D);
     }
 
-    const debug = this.debug;
+    // don't output console logs for matrix updates in auto mode - too verbose.
+    const debug = (this.debug && this.data.updateMode !== "auto")
     const componentMatrix = this.componentMatrix;
     this.instancedMeshes.forEach((mesh, componentIndex) => {
 
@@ -478,6 +483,9 @@ AFRAME.registerComponent('instanced-mesh', {
   },
 
   memberRemoved: function(event) {
+    if (this.debug) {
+      console.log(`Member ${event.detail.member.id} to be removed`);
+    }
 
     if (!this.meshLoaded) {
       // Mesh not yet loaded, so instanced mesh not yet created.
