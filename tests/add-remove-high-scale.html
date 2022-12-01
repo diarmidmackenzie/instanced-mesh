@@ -38,8 +38,7 @@
         console.log(`create block ${index}: (${x}, ${y})`)
         var sceneEl = document.querySelector('a-scene');
         var entityEl = document.createElement('a-entity');
-        // IDs no longer required for mesh members (though may be advisable for debugging)
-        //entityEl.setAttribute("id", "block" + index);
+        entityEl.setAttribute("id", "block" + index);
         entityEl.setAttribute("position", `${(x * 0.1) - 5} ${y * 0.1} -6`);
         if (USE_IM) {
           entityEl.setAttribute("mixin", "shape1");
