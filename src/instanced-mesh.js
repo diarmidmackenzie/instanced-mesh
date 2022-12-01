@@ -672,6 +672,18 @@ AFRAME.registerComponent('instanced-mesh-member', {
         this.added = true;
       }
     }
+
+    // create/remove invisible member mesh from the instanced mesh if needed.
+    if (this.data.memberMesh && !this.el.getObject3D('mesh'))
+    {
+      const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
+      const newMesh = originalMesh.clone()
+      newMesh.visible = false
+      this.el.setObject3D('mesh', newMesh)
+    }
+    else if (!this.data.memberMesh && this.el.getObject3D('mesh')) {
+      this.el.removeObject3D('mesh')
+    }
   },
 
   play: function () {
