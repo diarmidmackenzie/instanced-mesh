@@ -47,8 +47,7 @@ AFRAME.registerComponent('pinboard', {
           pin.setAttribute('ammo-shape', 'type:box; fit:manual; halfExtents: 0.05 0.5 0.05')
         }
         else if (this.data.physics === "cannon") {
-          // shape: auto not working yet...
-          pin.setAttribute('static-body', 'shape: box; halfExtents: 0.05 0.5 0.05')
+          pin.setAttribute('static-body', '')
         }
         else {
           pin.setAttribute('physx-body', 'type:static')
