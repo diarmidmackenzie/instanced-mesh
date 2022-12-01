@@ -54,6 +54,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Used for working, to save re-allocations.
     this.matrix = new THREE.Matrix4();
+    this.inverseMatrix = new THREE.Matrix4();
     this.debugMatrix = new THREE.Matrix4();
     this.componentMatrix = new THREE.Matrix4();
 
@@ -93,8 +94,8 @@ AFRAME.registerComponent('instanced-mesh', {
     // object *after* instanced-mesh.  This component gets initialized first but there
     // is no "model-loaded" event.  What's the equivalent?
     // For now, solution is to always specify instanced-mesh *after* geometry.
-    var originalMesh = this.el.getObject3D('mesh')
-    if (!originalMesh) {
+    var previousMesh = this.el.getObject3D('mesh')
+    if (!previousMesh) {
         this.el.addEventListener('model-loaded', e => {
         this.update.call(this, this.data)
         })
@@ -123,12 +124,12 @@ AFRAME.registerComponent('instanced-mesh', {
       }
     }
 
-    if (originalMesh.count > 0) {
+    if (previousMesh.count > 0) {
       // we already have a set of instanced meshes in place.
-      console.assert(originalMesh === this.instancedMeshes[0])
+      console.assert(previousMesh === this.instancedMeshes[0])
 
       // but do they have enough capacity?
-      if (originalMesh.instanceMatrix.count < this.data.capacity) {
+      if (previousMesh.instanceMatrix.count < this.data.capacity) {
         // resize instanced meshes
         this.increaseInstancedMeshCapacity();
       }
@@ -139,7 +140,9 @@ AFRAME.registerComponent('instanced-mesh', {
     else {
       // No instanced Meshes yet in place.  Analyze original mesh to see how to
       // build the instanced Meshes.
-      this.meshNodes = this.constructMeshNodes(originalMesh);
+      
+
+      this.meshNodes = this.constructMeshNodes(previousMesh);
 
       this.instancedMeshes = [];
       this.componentMatrices = [];
@@ -155,18 +158,26 @@ AFRAME.registerComponent('instanced-mesh', {
         this.instancedMeshes.push(instancedMesh);
         this.componentMatrices.push(node.matrixWorld)
       });
+
+      // Add all the instanced meshes as children of the object3D, and hide
+      // the original mesh.
+      this.instancedMeshes.forEach(mesh => {
+        this.el.object3D.add(mesh);
+      });
+      
+      // Keep the original mesh, but make invisible.
+      // Useful for generating per-member meshes for physics/raycasting.
+      // (see instanced-mesh-member 'memberMesh' option)
+      this.originalMesh = previousMesh;
+      previousMesh.visible = false;
+
+      // set the Object3D Map to point to the first instanced mesh.
+      this.el.setObject3D('mesh', this.instancedMeshes[0]);
     }
 
     // some other details that may need to be updated on the instanced meshes...
     this.updateFrustrumCulling();
     this.updateLayers();
-
-    // Add all the instanced meshes as children of the object3D, and remove
-    // the original mesh.
-    this.instancedMeshes.forEach(mesh => {
-      this.el.object3D.add(mesh);
-    });
-    this.el.object3D.remove(originalMesh);
 
     // set the Object3D Map to point to the first instanced mesh.
     this.el.setObject3D('mesh', this.instancedMeshes[0]);
@@ -271,8 +282,12 @@ AFRAME.registerComponent('instanced-mesh', {
   constructMeshNodes: function(originalMesh) {
     meshNodes  = [];
 
-    originalMesh.updateMatrixWorld();
-    originalMesh.traverse(function(node) {
+    originalMesh.updateMatrixWorld()
+    this.inverseMatrix.copy(originalMesh.matrixWorld)
+    this.inverseMatrix.invert()
+    const inverseMatrix = this.inverseMatrix
+
+    originalMesh.traverse((node) => {
 
       var material;
       var geometry;
@@ -296,12 +311,12 @@ AFRAME.registerComponent('instanced-mesh', {
       }
 
       node.updateMatrixWorld();
-      this.matrix = node.matrixWorld.clone();
-      this.matrix.premultiply(originalMesh.matrixWorld.invert());
+      const matrix = node.matrixWorld.clone();
+      matrix.premultiply(inverseMatrix);
 
       meshNodes.push({'geometry' : geometry,
                       'material' : material,
-                      'matrixWorld': this.matrix});
+                      'matrixWorld': matrix});
     })
 
     return meshNodes;
@@ -600,7 +615,8 @@ AFRAME.registerComponent('instanced-mesh', {
 AFRAME.registerComponent('instanced-mesh-member', {
   schema: {
         mesh:       {type: 'selector'},
-        debug:      {type: 'boolean', default: false}
+        debug:      {type: 'boolean', default: false},
+        memberMesh: {type: 'boolean', default: false}
   },
 
   init: function() {
@@ -655,6 +671,18 @@ AFRAME.registerComponent('instanced-mesh-member', {
         this.visible = true;
         this.added = true;
       }
+    }
+
+    // create/remove invisible member mesh from the instanced mesh if needed.
+    if (this.data.memberMesh && !this.el.getObject3D('mesh'))
+    {
+      const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
+      const newMesh = originalMesh.clone()
+      newMesh.visible = false
+      this.el.setObject3D('mesh', newMesh)
+    }
+    else if (!this.data.memberMesh && this.el.getObject3D('mesh')) {
+      this.el.removeObject3D('mesh')
     }
   },
 
