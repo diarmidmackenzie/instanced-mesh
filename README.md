@@ -293,11 +293,13 @@ Typical uses for this are:
 - For raycasting.  Since raycasting works against invisible objects, when `memberMesh` is configured on an instanced mesh member, it can be raycasted against just like any other element.
 - For physics body configuration.  Physics engines like [aframe-physics-system](https://github.com/c-frame/aframe-physics-system) and [physx](https://github.com/c-frame/physx) typically derive physics body shapes automatically from an entity's mesh.  When using instancing, this same functionality can be made available by configuring `memberMesh` on an instanced mesh member.
 
-[THREE.js InstancedMesh](https://threejs.org/docs/#api/en/objects/InstancedMesh) does support raycasting directly against the instanced mesh.  That functionality is not used by this implementation for a couple of reasons:
+[THREE.js InstancedMesh](https://threejs.org/docs/#api/en/objects/InstancedMesh) does support raycasting directly against the instanced mesh.  That functionality is not used by this implementation for several reasons:
 
 - It doesn't offer any significant performance benefit, since raycasting still has to check against every triangle in every member of the instance mesh.
 
 - It reduces flexibility: raycasting can be enabled/disabled only at the scope of the whole mesh, rather than being enabled/disabled on a per-member basis.
+
+- It would require updates to core A-Frame, as the additional properties reported by THREE.js instanced raycasting are not currently made available by the A-Frame raycaster & cursor components.
 
   
 
