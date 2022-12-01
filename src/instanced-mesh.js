@@ -97,7 +97,7 @@ AFRAME.registerComponent('instanced-mesh', {
     var previousMesh = this.el.getObject3D('mesh')
     if (!previousMesh) {
         this.el.addEventListener('model-loaded', e => {
-        this.update.call(this, this.data)
+          this.update.call(this, this.data)
         })
         return;
     }
@@ -685,9 +685,16 @@ AFRAME.registerComponent('instanced-mesh-member', {
     if (this.data.memberMesh && !this.el.getObject3D('mesh'))
     {
       const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
-      const newMesh = originalMesh.clone()
-      newMesh.visible = false
-      this.el.setObject3D('mesh', newMesh)
+      if (originalMesh) {
+        const newMesh = originalMesh.clone()
+        newMesh.visible = false
+        this.el.setObject3D('mesh', newMesh)
+      }
+      else {
+        this.data.mesh.addEventListener('model-loaded', e => {
+          this.update.call(this, this.data)
+        });
+      }
     }
     else if (!this.data.memberMesh && this.el.getObject3D('mesh')) {
       this.el.removeObject3D('mesh')
