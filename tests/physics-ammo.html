@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Physics Benchmark Test - PhysX</title>
+    <meta name="description" content="Physics Benchmark Test - PhysX">
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://mixedreality.mozilla.org/ammo.js/builds/ammo.wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.1.0/dist/aframe-physics-system.min.js"></script>
+    <script src="./components/pinboard.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/tests/physics-ammo.html">
+      view code
+    </a>
+    <a-scene physics="driver: ammo; stats: panel"
+             stats>
+        <a-box id="pin-mesh" color="black" width="0.1" depth="0.1" height="1"
+               instanced-mesh="capacity: 500; position:world"></a-box>
+        <a-sphere id="ball-mesh" radius="0.3" color="yellow"
+               instanced-mesh="capacity: 100; position:world; updateMode: auto"></a-sphere>
+        <a-entity id="pinboard" pinboard="physics: physx; height:20; width: 20" position = "0 0 -20" rotation = "45 0 0">
+        </a-entity>
+
+        <a-entity id="ball-recycler" ball-recycler="physics: physx; ballCount: 100; width: 15; depth: 15; yKill: -8" position="0 8 -20">
+        </a-entity>
+    </a-scene>
+  </body>
+</html>
+
+   
+   
