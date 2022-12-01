@@ -116,6 +116,10 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Raycasting](https://diarmidmackenzie.github.io/instanced-mesh/tests/raycasting.html)
 
+[Physics w/ Ammo Driver](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-ammo.html)
+
+[Physics w/ Cannon Driver](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-cannon.html)
+
 ## Interface
 
 ### instanced-mesh
@@ -292,6 +296,8 @@ Typical uses for this are:
 
 - For raycasting.  Since raycasting works against invisible objects, when `memberMesh` is configured on an instanced mesh member, it can be raycasted against just like any other element.
 - For physics body configuration.  Physics engines like [aframe-physics-system](https://github.com/c-frame/aframe-physics-system) and [physx](https://github.com/c-frame/physx) typically derive physics body shapes automatically from an entity's mesh.  When using instancing, this same functionality can be made available by configuring `memberMesh` on an instanced mesh member.
+  - Note: this function is not yet working for PhysX, and has some caveats for Cannon.  See [issue #15](https://github.com/diarmidmackenzie/instanced-mesh/issues/15) for details.
+
 
 [THREE.js InstancedMesh](https://threejs.org/docs/#api/en/objects/InstancedMesh) does support raycasting directly against the instanced mesh.  That functionality is not used by this implementation for several reasons:
 
