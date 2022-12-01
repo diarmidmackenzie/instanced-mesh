@@ -1,3 +1,7 @@
+/* Components in this modeule are derived from:
+ * https://github.com/c-frame/aframe-physics-system/blob/master/examples/components/pinboard.js
+ */
+
 ballCounter = 0;
 
 // creates a pinboard height x width, + 2m at top & bottom, laid flat.
@@ -25,10 +29,10 @@ AFRAME.registerComponent('pinboard', {
             box.setAttribute('ammo-shape', 'type:box;fit:all')
           }
           else if (this.data.physics === "cannon") {
-              box.setAttribute('static-body', '')
+            box.setAttribute('static-body', '')
           }
           else {
-              box.setAttribute('physx-body', 'type:static')
+            box.setAttribute('physx-body', 'type:static')
           }  
           box.object3D.position.set(x, y, z)
           box.object3D.rotation.set(0, yRot, 0)
