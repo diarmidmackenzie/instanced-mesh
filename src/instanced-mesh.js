@@ -89,6 +89,9 @@ AFRAME.registerComponent('instanced-mesh', {
         break;
     }
 
+    // store off whether we are in auto mode, for fast checking.
+    this.autoMode = (this.data.updateMode === "auto")
+
     // Possible we are waiting for a GLTF model to load.  If so, defer processing...
     // !! We have a bug where using a geometry where that is specified on the
     // object *after* instanced-mesh.  This component gets initialized first but there
@@ -97,7 +100,7 @@ AFRAME.registerComponent('instanced-mesh', {
     var previousMesh = this.el.getObject3D('mesh')
     if (!previousMesh) {
         this.el.addEventListener('model-loaded', e => {
-        this.update.call(this, this.data)
+          this.update.call(this, this.data)
         })
         return;
     }
@@ -169,6 +172,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // Useful for generating per-member meshes for physics/raycasting.
       // (see instanced-mesh-member 'memberMesh' option)
       this.originalMesh = previousMesh;
+      this.el.emit("original-mesh-ready")
       previousMesh.visible = false;
 
       // set the Object3D Map to point to the first instanced mesh.
@@ -366,7 +370,7 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(member);
     }
 
-    this.updateMatricesFromMemberObject(member.object3D, index);
+    this.updateMatricesFromMemberObject(member.object3D, index, this.autoMode);
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
@@ -393,7 +397,7 @@ AFRAME.registerComponent('instanced-mesh', {
     }
 
     // don't output console logs for matrix updates in auto mode - too verbose.
-    const debug = (this.debug && this.data.updateMode !== "auto")
+    const debug = (this.debug && !this.autoMode)
     const componentMatrix = this.componentMatrix;
     this.instancedMeshes.forEach((mesh, componentIndex) => {
 
@@ -432,7 +436,13 @@ AFRAME.registerComponent('instanced-mesh', {
     {
       const parent = this.el.object3D.parent
       const parentInverse = this.parentWorldMatrixInverse
-      parent.updateMatrixWorld();
+      // Don't understand why this is necessaty.
+      // parent.updateWorldMatrix() which updates the parent's worlDMatrix ought to be sufficient
+      // But only parent.updateMatrixWorld() seems to get everything into the right state.
+      // Even parent.updateWorldMatrix(true, true), which seems more-or-less equivalent doesn't work.
+      // Some careful testing needed to figure this out & find the optimal solution.
+      // Issue being that parent.updateWorldMatrix() is quite performance-intensive.
+      parent.updateMatrixWorld()
       parentInverse.copy(parent.matrixWorld)
       parentInverse.invert()
       
@@ -479,7 +489,7 @@ AFRAME.registerComponent('instanced-mesh', {
       console.error(`Member ${id} not found for modification`)
     }
 
-    this.updateMatricesFromMemberObject(event.detail.member.object3D, index);
+    this.updateMatricesFromMemberObject(event.detail.member.object3D, index, this.autoMode);
   },
 
   memberRemoved: function(event) {
@@ -598,12 +608,12 @@ AFRAME.registerComponent('instanced-mesh', {
       console.log("Removals done");
     }
 
-    if (this.data.updateMode === "auto") {
+    if (this.autoMode) {
 
       // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
       const parent = this.el.object3D.parent
       const parentInverse = this.parentWorldMatrixInverse
-      parent.updateMatrixWorld();
+      parent.updateWorldMatrix();
       parentInverse.copy(parent.matrixWorld)
       parentInverse.invert()
 
@@ -613,7 +623,7 @@ AFRAME.registerComponent('instanced-mesh', {
         const object = list[ii].object3D
         
         if (object) {
-          this.updateMatricesFromMemberObject(object, ii);
+          this.updateMatricesFromMemberObject(object, ii, true);
         }
       }; 
     }
@@ -685,9 +695,22 @@ AFRAME.registerComponent('instanced-mesh-member', {
     if (this.data.memberMesh && !this.el.getObject3D('mesh'))
     {
       const originalMesh = this.data.mesh.components['instanced-mesh'].originalMesh
-      const newMesh = originalMesh.clone()
-      newMesh.visible = false
-      this.el.setObject3D('mesh', newMesh)
+      const el = this.el
+
+      function setMesh(mesh) {
+        const newMesh = mesh.clone()
+        newMesh.visible = false
+        el.setObject3D('mesh', newMesh)
+      }
+
+      if (originalMesh) {
+        setMesh(originalMesh)
+      }
+      else {
+        this.data.mesh.addEventListener('original-mesh-ready', e => {
+          setMesh(this.data.mesh.components['instanced-mesh'].originalMesh)
+        });
+      }
     }
     else if (!this.data.memberMesh && this.el.getObject3D('mesh')) {
       this.el.removeObject3D('mesh')

@@ -94,6 +94,8 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Capacity Updates](https://diarmidmackenzie.github.io/instanced-mesh/tests/updates.html)
 
+[Movement of GLTF models at high scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models=scale-movement.html)
+
 #### Examples with Multi-mesh GLTF models
 
 [3D Models Multi-mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models-multi-mesh.html)
@@ -402,3 +404,5 @@ The texture used in the [env-map spheres example](https://diarmidmackenzie.githu
 
 
 The texture used on the [textured cubes example](https://diarmidmackenzie.github.io/instanced-mesh/tests/texture-example.html) re-uses a texture from this A-Frame example: https://aframe.io/examples/showcase/responsiveui/
+
+The car used in the [Movement of GLTF models at high scale](https://diarmidmackenzie.github.io/instanced-mesh/tests/3d-models=scale-movement.html) example is from [Tomás Laulhé](https://quaternius.com/packs/cars.html)
