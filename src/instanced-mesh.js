@@ -436,7 +436,13 @@ AFRAME.registerComponent('instanced-mesh', {
     {
       const parent = this.el.object3D.parent
       const parentInverse = this.parentWorldMatrixInverse
-      parent.updateMatrixWorld();
+      // Don't understand why this is necessaty.
+      // parent.updateWorldMatrix() which updates the parent's worlDMatrix ought to be sufficient
+      // But only parent.updateMatrixWorld() seems to get everything into the right state.
+      // Even parent.updateWorldMatrix(true, true), which seems more-or-less equivalent doesn't work.
+      // Some careful testing needed to figure this out & find the optimal solution.
+      // Issue being that parent.updateWorldMatrix() is quite performance-intensive.
+      parent.updateMatrixWorld()
       parentInverse.copy(parent.matrixWorld)
       parentInverse.invert()
       
@@ -607,7 +613,7 @@ AFRAME.registerComponent('instanced-mesh', {
       // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
       const parent = this.el.object3D.parent
       const parentInverse = this.parentWorldMatrixInverse
-      parent.updateMatrixWorld();
+      parent.updateWorldMatrix();
       parentInverse.copy(parent.matrixWorld)
       parentInverse.invert()
 

@@ -8,7 +8,7 @@
   </head>
   <body>
     <div class="text-overlay">
-      <p>A large instanced mesh with 1660 instances of a GLTF.  Hold left mouse button to look around.</p>
+      <p>A large instanced mesh with 1000 instances of a GLTF.  The GLTF itself has 12 parts.  Hold left mouse button and drag to look around.</p>
       <p>This uses updateMode: auto to efficiently update transforms of all instances in the mesh, every frame.</p>
     </div>
     <a class="code-link"
@@ -23,7 +23,7 @@
 
       <a-entity id="car-instanced-mesh"
                 gltf-model="#car-model"
-                instanced-mesh="capacity:2000;
+                instanced-mesh="capacity:1000;
                                 positioning: world;
                                 updateMode: auto">
       </a-entity>
@@ -39,7 +39,7 @@
       <a-entity id="gameArea">
         <a-box color="green" position="0 -1 0" width="500" depth="500">
         </a-box>
-        <a-entity landscape="numRoads:166" position="-250 0 0">
+        <a-entity landscape="numRoads:100" position="-150 0 0 0">
           <a-box id="road-mesh"
              instanced-mesh="capacity:200"
              color="black"
