@@ -6,7 +6,8 @@ AFRAME.registerComponent('instanced-mesh', {
       positioning: {type: 'string', default: "local"},
       debug:      {type: 'boolean', default: false},
       layers:     {type: 'string', default: ""},
-      updateMode: {type: 'string', default: "manual", oneOf: ["auto", "manual"]}
+      updateMode: {type: 'string', default: "manual", oneOf: ["auto", "manual"]},
+      decompose:  {type: 'boolean', default: true}
   },
 
   init: function () {
@@ -62,6 +63,9 @@ AFRAME.registerComponent('instanced-mesh', {
     // code that uses this should intelligently update it when necessary.
     this.parentWorldMatrixInverse = this.el.object3D.parent.matrixWorld.clone()
     this.parentWorldMatrixInverse.invert()
+
+    // Used when setting color attributes in instanced meshes.
+    this.color = new THREE.Color()
   },
 
   attachEventListeners: function() {
@@ -149,6 +153,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
       this.instancedMeshes = [];
       this.componentMatrices = [];
+      this.componentMaterials = [];
 
       this.meshNodes.forEach((node, index) => {
         var instancedMesh = new THREE.InstancedMesh(node.geometry,
@@ -158,8 +163,9 @@ AFRAME.registerComponent('instanced-mesh', {
         // For each instanced mesh required, we store off both the instanced mesh
         // itself. and the transform matrix for the component of the model that
         // it represents.
-        this.instancedMeshes.push(instancedMesh);
+        this.instancedMeshes.push(instancedMesh)
         this.componentMatrices.push(node.matrixWorld)
+        this.componentMaterials.push(node.materialIndex)
       });
 
       // Add all the instanced meshes as children of the object3D, and hide
@@ -293,37 +299,105 @@ AFRAME.registerComponent('instanced-mesh', {
 
     originalMesh.traverse((node) => {
 
-      var material;
-      var geometry;
+      let material;
+      let geometry;
 
       if(node.type != "Mesh") return;
       geometry = node.geometry;
 
-      // material can be an array of materials.  We want the whole array.
-      // Why clone?  AFrame-InstancedMesh says:
-      // this component creates a .clone() of parent material because of a known
-      // threejs limitation.
-      // I don't yet have a reference for what that threejs limittation is, and
-      // whether it still applies.
-      if (Array.isArray(node.material)) {
-        material = [];
-        node.material.forEach(item => material.push(item.clone()));
-      }
-      else
-      {
-        material = node.material.clone();
-      }
+      if (this.data.decompose && geometry.groups && geometry.groups.length > 1) {
+        // geometry consists of multiple groups, to decompose.
 
-      node.updateMatrixWorld();
-      const matrix = node.matrixWorld.clone();
-      matrix.premultiply(inverseMatrix);
+        const materialIndices = new Set()
+        geometry.groups.forEach((group) => {
+          materialIndices.add(group.materialIndex)
+        })
 
-      meshNodes.push({'geometry' : geometry,
-                      'material' : material,
-                      'matrixWorld': matrix});
-    })
+        materialIndices.forEach((index) => {
+          const partGeometries = this.constructPartGeometries(geometry, index);
+
+          partGeometries.forEach((partGeometry) => {
+
+            // Use specified material; or default if none specified for this index.
+            if (Array.isArray(node.material)) {
+              if (node.material.length > index) {
+                material = node.material[index].clone();
+              }
+              else {
+                material = node.material[0].clone();
+              }
+            }
+            else
+            {
+              material = node.material.clone();
+            }
+
+            // Set material color to white.  Colors set on instanced Mesh are combined with this
+            // color, so setting to white gives access to full range of color values.
+            material.color.set("white")
+
+            node.updateMatrixWorld();
+            const matrix = node.matrixWorld.clone();
+            matrix.premultiply(inverseMatrix);
+                
+            meshNodes.push({'geometry' : partGeometry,
+                            'material' : material,
+                            'materialIndex' : index,
+                            'matrixWorld': matrix});
+          })
+        })
+      }
+      else {
+        // material can be an array of materials.  We want the whole array.
+        // Why clone?  AFrame-InstancedMesh says:
+        // this component creates a .clone() of parent material because of a known
+        // threejs limitation.
+        // I don't yet have a reference for what that threejs limittation is, and
+        // whether it still applies.
+        material = this.cloneMaterial(node.material)
+
+        node.updateMatrixWorld();
+        const matrix = node.matrixWorld.clone();
+        matrix.premultiply(inverseMatrix);
+
+        meshNodes.push({'geometry' : geometry,
+                        'material' : material,
+                        'matrixWorld': matrix});
+      }
+    });
 
     return meshNodes;
+  },
+
+  cloneMaterial(material) {
+
+    if (Array.isArray(material)) {
+      material = [];
+      node.material.forEach(item => material.push(item.clone()));
+    }
+    else
+    {
+      material = node.material.clone();
+    }
+
+    return material;
+  },
+
+  constructPartGeometries(geometry, materialIndex) {
+    // construct an array of partial geometries that will render the
+    // parts of a geometry that match a given materialIndex.
+    const partGeometries = []
+
+    geometry.groups.forEach((group) => {
+      if (group.materialIndex === materialIndex) {
+        const partGeometry = geometry.clone()
+        partGeometry.setDrawRange(group.start, group.count)
+        partGeometries.push(partGeometry)
+        partGeometry.clearGroups()
+      }
+    })
+
+    return partGeometries;
   },
 
   memberAdded: function(event) {
@@ -416,6 +490,26 @@ AFRAME.registerComponent('instanced-mesh', {
 
       componentMatrix.multiplyMatrices(matrix, this.componentMatrices[componentIndex]);
       mesh.setMatrixAt(index, componentMatrix);
+
+      let color
+      const colorIndex = this.componentMaterials[componentIndex]
+      let colors = object3D.el.components['instanced-mesh-member'].data.colors
+      if (colors.length > 0) {
+        
+        if (colorIndex) {
+          this.color.set(colors[colorIndex])
+        }
+        else if (Array.isArray(colors)) {
+          this.color.set(colors[0])
+        }
+        else {
+          this.color.set(colors)
+        }
+      }
+      else {
+        this.color.copy(this.originalMesh.material[colorIndex].color)
+      }
+      mesh.setColorAt(index, this.color)
 
       mesh.instanceMatrix.needsUpdate = true;
     });
@@ -634,7 +728,8 @@ AFRAME.registerComponent('instanced-mesh-member', {
   schema: {
         mesh:       {type: 'selector'},
         debug:      {type: 'boolean', default: false},
-        memberMesh: {type: 'boolean', default: false}
+        memberMesh: {type: 'boolean', default: false},
+        colors:     {type: 'array'}
   },
 
   init: function() {
