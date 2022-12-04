@@ -362,6 +362,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
         meshNodes.push({'geometry' : geometry,
                         'material' : material,
+                        'materialIndex' : 0,
                         'matrixWorld': matrix});
       }
     });
@@ -373,12 +374,16 @@ AFRAME.registerComponent('instanced-mesh', {
 
     if (Array.isArray(material)) {
       material = [];
-      node.material.forEach(item => material.push(item.clone()));
+      material.forEach(item => material.push(item.clone()));
     }
     else
     {
-      material = node.material.clone();
+      material = material.clone();
     }
+
+    // Set material color to white.  Colors set on instanced Mesh are combined with this
+    // color, so setting to white gives access to full range of color values.
+    material.color.set("white")
 
     return material;
   },
@@ -507,7 +512,12 @@ AFRAME.registerComponent('instanced-mesh', {
         }
       }
       else {
-        this.color.copy(this.originalMesh.material[colorIndex].color)
+        if (Array.isArray(this.originalMesh.material)) {
+          this.color.copy(this.originalMesh.material[colorIndex].color)
+        }
+        else {
+          this.color.copy(this.originalMesh.material.color)
+        }
       }
       mesh.setColorAt(index, this.color)
 
