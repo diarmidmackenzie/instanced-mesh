@@ -24,11 +24,18 @@ AFRAME.registerComponent('road', {
     vehicle.setAttribute("id", `${this.el.id}-vehicle-${index}`)
     // memberMesh set to "true" - not actually needed for this example, but handy additional test coverage
     // for a setting that has been problematic with GLTFs at scale...
-    colorString = `#${Math.floor(Math.random()*4096).toString(16).padStart(3, "0")}`
-    vehicle.setAttribute("instanced-mesh-member",
-                         `mesh:#car-instanced-mesh;
-                          memberMesh: true;
-                          colors: ${colorString}`)
+    if (this.data.multicolor) {
+      colorString = `#${Math.floor(Math.random()*4096).toString(16).padStart(3, "0")}`
+      vehicle.setAttribute("instanced-mesh-member",
+                          `mesh:#car-instanced-mesh;
+                            memberMesh: true;
+                            colors: ${colorString}`)
+    }
+    else {
+      vehicle.setAttribute("instanced-mesh-member",
+                          `mesh:#car-instanced-mesh;
+                            memberMesh: true`)
+    }
     vehicle.setAttribute("z-movement", {speed: this.data.speed,
                                         loopLower: -roadLength/2,
                                         loopUpper: roadLength/2})
