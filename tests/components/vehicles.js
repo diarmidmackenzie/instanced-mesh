@@ -101,9 +101,9 @@ AFRAME.registerComponent('landscape', {
     const road = document.createElement('a-entity')
     road.setAttribute("id", `road-${index}`)
     road.setAttribute("instanced-mesh-member", "mesh:#road-mesh")
-    road.setAttribute("multicolor", this.data.multicolor)
     road.setAttribute("road", {numVehicles: 10,
-                               speed: speed})
+                               speed: speed,
+                               multicolor: this.data.multicolor})
     road.object3D.position.set(xPosition, -0.99, 0)
 
     this.el.appendChild(road)
