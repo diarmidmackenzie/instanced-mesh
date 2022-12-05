@@ -3,7 +3,8 @@ AFRAME.registerComponent('road', {
   schema: {
     numVehicles: { type : 'number', default: 10},
     speed: {type: 'number', default: 3},
-    length: {type: 'number', default: 500}
+    length: {type: 'number', default: 500},
+    multicolor: { type : 'boolean', default: false}
   },
 
   init() {
@@ -23,7 +24,18 @@ AFRAME.registerComponent('road', {
     vehicle.setAttribute("id", `${this.el.id}-vehicle-${index}`)
     // memberMesh set to "true" - not actually needed for this example, but handy additional test coverage
     // for a setting that has been problematic with GLTFs at scale...
-    vehicle.setAttribute("instanced-mesh-member", "mesh:#car-instanced-mesh; memberMesh: true")
+    if (this.data.multicolor) {
+      colorString = `#${Math.floor(Math.random()*4096).toString(16).padStart(3, "0")}`
+      vehicle.setAttribute("instanced-mesh-member",
+                          `mesh:#car-instanced-mesh;
+                            memberMesh: true;
+                            colors: ${colorString}`)
+    }
+    else {
+      vehicle.setAttribute("instanced-mesh-member",
+                          `mesh:#car-instanced-mesh;
+                            memberMesh: true`)
+    }
     vehicle.setAttribute("z-movement", {speed: this.data.speed,
                                         loopLower: -roadLength/2,
                                         loopUpper: roadLength/2})
@@ -70,6 +82,7 @@ AFRAME.registerComponent('landscape', {
     numRoads: { type : 'number', default: 50},
     initialSpace: { type : 'number', default: 5},
     interval: { type : 'number', default: 3},
+    multicolor: { type : 'boolean', default: false},
   },
 
   init() {
@@ -87,9 +100,10 @@ AFRAME.registerComponent('landscape', {
 
     const road = document.createElement('a-entity')
     road.setAttribute("id", `road-${index}`)
-    road.setAttribute("instanced-mesh-member", "mesh:#road-mesh")    
+    road.setAttribute("instanced-mesh-member", "mesh:#road-mesh")
     road.setAttribute("road", {numVehicles: 10,
-                               speed: speed})
+                               speed: speed,
+                               multicolor: this.data.multicolor})
     road.object3D.position.set(xPosition, -0.99, 0)
 
     this.el.appendChild(road)
