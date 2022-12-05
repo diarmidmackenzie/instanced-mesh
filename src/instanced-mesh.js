@@ -7,7 +7,8 @@ AFRAME.registerComponent('instanced-mesh', {
       debug:      {type: 'boolean', default: false},
       layers:     {type: 'string', default: ""},
       updateMode: {type: 'string', default: "manual", oneOf: ["auto", "manual"]},
-      decompose:  {type: 'boolean', default: true}
+      decompose:  {type: 'boolean', default: false},
+      drainColor: {type: 'boolean', default: false}
   },
 
   init: function () {
@@ -153,7 +154,8 @@ AFRAME.registerComponent('instanced-mesh', {
 
       this.instancedMeshes = [];
       this.componentMatrices = [];
-      this.componentMaterials = [];
+      this.componentMaterialIndices = [];
+      this.componentOriginalColors = [];
 
       this.meshNodes.forEach((node, index) => {
         var instancedMesh = new THREE.InstancedMesh(node.geometry,
@@ -165,7 +167,8 @@ AFRAME.registerComponent('instanced-mesh', {
         // it represents.
         this.instancedMeshes.push(instancedMesh)
         this.componentMatrices.push(node.matrixWorld)
-        this.componentMaterials.push(node.materialIndex)
+        this.componentMaterialIndices.push(node.materialIndex)
+        this.componentOriginalColors.push(node.originalColor)
       });
 
       // Add all the instanced meshes as children of the object3D, and hide
@@ -318,23 +321,17 @@ AFRAME.registerComponent('instanced-mesh', {
 
           partGeometries.forEach((partGeometry) => {
 
-            // Use specified material; or default if none specified for this index.
-            if (Array.isArray(node.material)) {
-              if (node.material.length > index) {
-                material = node.material[index].clone();
-              }
-              else {
-                material = node.material[0].clone();
-              }
+            // Use specified material; or default if none specified for this index
+            const material = this.cloneMaterial(node.material, index)
+            let color
+            if (this.data.drainColor) {
+              color = this.drainColor(material)
             }
-            else
-            {
-              material = node.material.clone();
+            else {
+              console.warn("Decomposing Instanced Mesh without draining color")
+              console.warn("If your intention is to re-color individual mesh members, you should")
+              console.warn("drain colors using drainColors: true, to allow individual mesh members to be re-colored correctly")
             }
-
-            // Set material color to white.  Colors set on instanced Mesh are combined with this
-            // color, so setting to white gives access to full range of color values.
-            material.color.set("white")
 
             node.updateMatrixWorld();
             const matrix = node.matrixWorld.clone();
@@ -342,19 +339,23 @@ AFRAME.registerComponent('instanced-mesh', {
                 
             meshNodes.push({'geometry' : partGeometry,
                             'material' : material,
+                            'originalColor' : color,
                             'materialIndex' : index,
                             'matrixWorld': matrix});
           })
         })
       }
       else {
-        // material can be an array of materials.  We want the whole array.
         // Why clone?  AFrame-InstancedMesh says:
         // this component creates a .clone() of parent material because of a known
         // threejs limitation.
         // I don't yet have a reference for what that threejs limittation is, and
         // whether it still applies.
-        material = this.cloneMaterial(node.material)
+        const material = this.cloneMaterial(node.material)
+        let color
+        if (this.data.drainColor) {
+          color = this.drainColor(material)
+        }
 
         node.updateMatrixWorld();
         const matrix = node.matrixWorld.clone();
@@ -362,7 +363,8 @@ AFRAME.registerComponent('instanced-mesh', {
 
         meshNodes.push({'geometry' : geometry,
                         'material' : material,
-                        'materialIndex' : 0,
+                        'originalColor' : color,
+                        'materialIndex' : meshNodes.length,
                         'matrixWorld': matrix});
       }
     });
@@ -370,22 +372,53 @@ AFRAME.registerComponent('instanced-mesh', {
     return meshNodes;
   },
 
-  cloneMaterial(material) {
+  // clone a material.  If index is specified, just clone that index from an array of materials.
+  
+  cloneMaterial(material, index) {
+
+    let newMaterial
+    let color
 
     if (Array.isArray(material)) {
-      material = [];
-      material.forEach(item => material.push(item.clone()));
+
+      if (index === undefined) {
+        newMaterial = [];
+        material.forEach(item => newMaterial.push(item.clone()))
+      }
+      else if (material.length > index) {
+        newMaterial = material[index].clone();
+      }
+      else {
+        newMaterial = material[0].clone();
+      }
     }
     else
     {
-      material = material.clone();
+      newMaterial = material.clone();
     }
 
-    // Set material color to white.  Colors set on instanced Mesh are combined with this
-    // color, so setting to white gives access to full range of color values.
-    material.color.set("white")
+    return newMaterial
+  },
 
-    return material;
+  // Set material color to white, and return old color so that it can be stored off.
+  drainColor(material) {
+    let color
+
+    if (Array.isArray(material)) {
+      material.forEach(m => {
+        this.drainColor(m)
+      });
+      console.warn("Draining colors from multi-material non-decomposed instanced mesh")
+      console.warn("Multiple colors can't be set at the member level unless the mesh is decomposed")
+      console.warn("To avoid color loss, either decompose the instanced mesh (decompose: true), or don't drain colors (drainColor: false)")
+      color = new THREE.Color("grey")
+    }
+    else {
+      color = material.color.clone()
+      material.color.set("white")
+    }
+
+    return color
   },
 
   constructPartGeometries(geometry, materialIndex) {
@@ -496,33 +529,40 @@ AFRAME.registerComponent('instanced-mesh', {
       componentMatrix.multiplyMatrices(matrix, this.componentMatrices[componentIndex]);
       mesh.setMatrixAt(index, componentMatrix);
 
-      let color
-      const colorIndex = this.componentMaterials[componentIndex]
-      let colors = object3D.el.components['instanced-mesh-member'].data.colors
-      if (colors.length > 0) {
-        
-        if (colorIndex) {
-          this.color.set(colors[colorIndex])
-        }
-        else if (Array.isArray(colors)) {
-          this.color.set(colors[0])
-        }
-        else {
-          this.color.set(colors)
-        }
+      const gotColor = this.getColorForComponent(object3D, componentIndex, this.color)
+      if (gotColor) {
+        mesh.setColorAt(index, this.color)
       }
-      else {
-        if (Array.isArray(this.originalMesh.material)) {
-          this.color.copy(this.originalMesh.material[colorIndex].color)
-        }
-        else {
-          this.color.copy(this.originalMesh.material.color)
-        }
-      }
-      mesh.setColorAt(index, this.color)
 
       mesh.instanceMatrix.needsUpdate = true;
     });
+  },
+
+  // Get the color for a particular component, based on:
+  // The member (this may have explicit color config)
+  // The original mesh (use this by default if the member doesn't specify any colors)
+  getColorForComponent(member, componentIndex, color) {
+
+    let gotColor = true
+
+    // the color index to look up on the mesh member.
+    const colorIndex = this.componentMaterialIndices[componentIndex]
+
+    // safe to assume member has an instanced-mesh-member component.
+    let colors = member.el.components['instanced-mesh-member'].data.colors
+
+    if (colors && colors.length > colorIndex) {
+      // member has specified a color for the relevant index.
+      color.set(colors[colorIndex])
+    }
+    else if (this.componentOriginalColors[componentIndex]) {
+      color.copy(this.componentOriginalColors[componentIndex])
+    }
+    else {
+      gotColor = false
+    }
+
+    return gotColor
   },
 
   // Get the matrix to add to an instanced mesh from an object 3D

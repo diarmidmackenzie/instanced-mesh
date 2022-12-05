@@ -122,6 +122,18 @@ Note: if your objects are not all in the same Frame of Reference as each other (
 
 [Physics w/ Cannon Driver](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-cannon.html)
 
+### Per-member coloring
+
+[Multi-color spheres](https://diarmidmackenzie.github.io/instanced-mesh/tests/spheres-multi-color.html)
+
+[Different colored blocks in a single Instanced Mesh](https://diarmidmackenzie.github.io/instanced-mesh/tests/multi-color-single-mesh.html)
+
+[Multi-color PBR](https://diarmidmackenzie.github.io/instanced-mesh/tests/pbr-multi-color.html)
+
+[Multi-color GLTF models](https://diarmidmackenzie.github.io/instanced-mesh/tests/multi-color-3d-models.html)
+
+
+
 ## Interface
 
 ### instanced-mesh
@@ -141,6 +153,8 @@ Configuration as follows:
 | layers      | String of comma-separated numbers, e.g. "0, 1" | A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component<br /> Note that the A-Frame Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component.no | none     |
 | debug       | boolean                                        | Enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.<br />For debug logs to be useful, it is recommended to configure IDs on the instance mesh member entities, as well as the mesh entity itself. | false    |
 | updateMode  | "manual" or "auto"                             | How to handle updates to the positions of instanced members.<br />- **manual**: transforms of members of the instanced mesh are only updated when the object3DUpdated event is emitted on that instanced mesh member.<br />- **auto**: transforms of all members of the instanced mesh are automatically updated every frame.<br />Manual updates generally perform better and are recommended in most and especially when the mesh members are static.  The exception is when you expect most member transforms to update most frames (e.g. a collection of dynamic physics bodies), in which case automatic updates are likely to perform better | "manual" |
+| decompose   | boolean                                        | When this is set, a geometry that contains multiple [groups](https://threejs.org/docs/?q=in#api/en/core/BufferGeometry.groups) will be decomposed into multiple Instanced Meshes.  The main reason you'd want to do this is to apply different colors to each group for different members of the mesh (see the `colors` property on `instanced-mesh-member`).  Usually if you set this, you'll also want to set `drainColor: true`, see below. | false    |
+| drainColor  | boolean                                        | When this is set, the color on the instanced mesh's material is set to white, and color is set explicitly for each member.  Colors are set using the `colors` property on `instanced-mesh-member`, although where there is no color specified on a member, the default color is re-instated.<br />Note that if colors are drained on an instanced mesh that supports multiple materials (via groups configured on the geometry), then it should be decomposed using `decompose: true` , see above.  If the mesh is not decomposed, then it is not possible to re-instate colors at the member level.  In such a configuration, a console warning is generated, and the mesh is rendered in a grey color. | false    |
 
 #### Notes on positioning
 
@@ -157,9 +171,7 @@ If these restrictions are causing you problems, the best solution is probably to
 
 ### instanced-mesh-member
 
-This should be configured on an entity that describes the desired position, orientation and scale of a single member of the Instanced Mesh.  The entity *must also* be configured with an id.
-
-As per above, this entity should be in the same Frame of Reference as the mesh that it is to be a member of.
+This should be configured on an entity that describes the desired position, orientation and scale of a single member of the Instanced Mesh.
 
 Configuration as follows:
 
@@ -168,6 +180,7 @@ Configuration as follows:
 | mesh       | selector | A selector for the mesh that this entity is to be a member of. |         |
 | debug      | boolean  | enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.<br />For debug logs to be useful, it is recommended to configure IDs on the instance mesh member entities, as well as the mesh entity itself. | false   |
 | memberMesh | boolean  | creates an invisible mesh for each member.  This can be useful for raycasting or physics body shape configuration on instanced Mesh members. | false   |
+| colors     | array    | an array of colors to use in coloring this member of the instanced mesh.  Provide a comma-separated list of colors, e.g. `black, yellow` or `#000, #ff0`.  Where colors are not specified, the default coloring of the original instanced mesh is used.<br />When coloring individual instanced mesh members, `drainColor` should be set on the instanced mesh, so that the original mesh colors do not interfere with the new colors.  Also, for multi-material meshes, `decompose` should be set on the instanced mesh, to allow each color to be specified independently.<br />For multi-material geometries, the order of the colors corresponds to the `materialIndex` values of the [groups](https://threejs.org/docs/?q=mesh#api/en/core/BufferGeometry.groups) in the geometry.  For multi-part GLTF meshes, the order of the colors corresponds to the order of parts in the GLTF. |         |
 
 
 
