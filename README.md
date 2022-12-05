@@ -275,6 +275,7 @@ On the mesh:
 
 - Various geometries
 - Various materials
+- Shadows
 
 On the member entity:
 
@@ -290,7 +291,6 @@ The following features ought to work, but have not yet been tested.
 
 On the mesh:
 
-- Shadows: castShadow & receiveShadow properties.  These are set for the entire mesh as a whole, and I'd expect them to work.
 - Transparency & Opacity.
 
 On the member entity:
