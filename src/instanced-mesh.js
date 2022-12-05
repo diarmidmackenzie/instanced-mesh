@@ -152,9 +152,29 @@ AFRAME.registerComponent('instanced-mesh', {
 
       this.meshNodes = this.constructMeshNodes(previousMesh);
 
+      // An array of instanced meshes used to render the instanced entity.
+      // There may be more then one of these:
+      // - rendering multi-part GLTFs requires multiple InstancedMesh objects.
+      // - if a multi-material geometry is decomposed into its groups to allow variable per-member coloring
+      //   of each material, this also requires multiple InstancedMesh objects.
       this.instancedMeshes = [];
+
+      // The matrix adjustment required for each instanced mesh.
+      // This is needed for multi-part GLTFs, where each part needs adjustment to the correct
+      // position, scale and orientation
       this.componentMatrices = [];
+
+      // An array of indices to be used for indxeing materials.  This is used to look up which color
+      // to use for each member, where colors are per-member.
+      // For decomposed multi-material geometries, this is the materialIndex set for each group in the geometry.
+      // For multi-part GLTFs, there is simply one material index per-part.
       this.componentMaterialIndices = [];
+
+      // A record of the original color of each material used in the mesh.
+      // This is used when colors have been drained, but a member of the instance mesh does not 
+      // explicitly specify a color.  In this case we fall back to a default of the coloring from the original mesh.
+      // We do also have a copy of the original mesh stored at this.originalMesh, but we keep this array so that we
+      // have a uniform way to easily access the color info we need.
       this.componentOriginalColors = [];
 
       this.meshNodes.forEach((node, index) => {
