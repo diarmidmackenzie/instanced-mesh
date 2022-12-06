@@ -252,6 +252,12 @@ AFRAME.registerComponent('instanced-mesh', {
         oldMesh.getMatrixAt(ii, this.matrix)
         newMesh.setMatrixAt(ii, this.matrix);
       }
+      if (oldMesh.instanceColor) {
+        for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
+          oldMesh.getColorAt(ii, this.color)
+          newMesh.setColorAt(ii, this.color);
+        }
+      }
 
       this.el.object3D.add(newMesh);
       this.el.object3D.remove(oldMesh);
@@ -512,6 +518,9 @@ AFRAME.registerComponent('instanced-mesh', {
     this.instancedMeshes.forEach(mesh => {
       mesh.count = this.members;
       mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) {
+        mesh.instanceColor.needsUpdate = true;
+      }
     });
   },
 
@@ -552,8 +561,10 @@ AFRAME.registerComponent('instanced-mesh', {
       const gotColor = this.getColorForComponent(object3D, componentIndex, this.color)
       if (gotColor) {
         mesh.setColorAt(index, this.color)
+        mesh.instanceColor.needsUpdate = true;
       }
 
+      mesh.instanceColor.needsUpdate = true;
       mesh.instanceMatrix.needsUpdate = true;
     });
   },
@@ -750,6 +761,11 @@ AFRAME.registerComponent('instanced-mesh', {
 
               mesh.getMatrixAt(matrixCursor + 1, this.matrix);
               mesh.setMatrixAt(matrixCursor - removed + 1, this.matrix);
+
+              if (mesh.instanceColor) {
+                mesh.getColorAt(matrixCursor + 1, this.color);
+                mesh.setColorAt(matrixCursor - removed + 1, this.color);
+              }
             });
           }
         }
@@ -759,6 +775,9 @@ AFRAME.registerComponent('instanced-mesh', {
       this.instancedMeshes.forEach(mesh => {
         mesh.count = this.members;
         mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) {
+          mesh.instanceColor.needsUpdate = true;
+        }
       });
 
       // No further pending removals.
@@ -813,7 +832,7 @@ AFRAME.registerComponent('instanced-mesh-member', {
 
     // Some state we track, to help make the right updates to the Instanced Mesh.
     this.visible = this.el.object3D.visible;
-    this.matrix = this.el.object3D.matrix.clone();
+    this.colors = this.data.colors;
   },
 
   update: function () {
@@ -828,19 +847,12 @@ AFRAME.registerComponent('instanced-mesh-member', {
         this.visible = false;
       }
       else {
-        // Object was & is visible.  Check for other updates that need to be
+        // Object was & is visible.  There may be other updates that need to be
         // mirrored to the Mesh.
-        // Basically just the localMatrix at this stage...
-        // (we'll need to revisit when we support multiple frames of reference...)
-        if (!this.matrix.equals(this.el.object3D.matrix)) {
-          // there's been some change to position, orientation or scale, so
-          // mirror it.
-          if (this.debug) {
-            console.log("Modified:" + this.el.id);
-          }
-          this.data.mesh.emit('memberModified', {'member': this.el});
-          this.matrix.copy(this.el.object3D.matrix);
-        }
+        // E.g. local matrix, some ancestor matrix, colors etc.
+        // Checking for all possible changes gets too complicated
+        // so just push through an update.
+        this.data.mesh.emit('memberModified', {'member': this.el});
       }
     }
     else {
@@ -850,7 +862,6 @@ AFRAME.registerComponent('instanced-mesh-member', {
           console.log("Added (v):" + this.el.id);
         }
         this.data.mesh.emit('memberAdded', {member: this.el});
-        this.matrix.copy(this.el.object3D.matrix);
         this.visible = true;
         this.added = true;
       }
@@ -893,7 +904,6 @@ AFRAME.registerComponent('instanced-mesh-member', {
         console.log("Added:" + this.el.id);
       }
       this.data.mesh.emit('memberAdded', {member: this.el});
-      this.matrix.copy(this.el.object3D.matrix);
       this.added = true;
     }
   },
