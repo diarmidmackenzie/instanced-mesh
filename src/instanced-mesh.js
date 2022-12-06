@@ -661,7 +661,7 @@ AFRAME.registerComponent('instanced-mesh', {
     const index = this.orderedMembersList.findIndex(x => (x === member));
 
     if (index == -1) {
-      console.error(`Member ${id} not found for modification`)
+      console.error(`Member ${member.id} not found for modification`)
     }
 
     this.updateMatricesFromMemberObject(event.detail.member.object3D, index, this.autoMode);
@@ -846,7 +846,7 @@ AFRAME.registerComponent('instanced-mesh-member', {
         this.data.mesh.emit('memberRemoved', {member: this.el});
         this.visible = false;
       }
-      else {
+      else if(this.added) {
         // Object was & is visible.  There may be other updates that need to be
         // mirrored to the Mesh.
         // E.g. local matrix, some ancestor matrix, colors etc.
