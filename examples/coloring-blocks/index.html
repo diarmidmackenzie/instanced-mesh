@@ -1,34 +1,53 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/aframe-examples@latest/components/raycast-target.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/aframe-examples@latest/components/mouse-manipulation.min.js"></script>
     <script src="../../src/instanced-mesh.js"></script>
     <script src="./framed-block.js"></script>
     <script src="./block-stack.js"></script>
+    <link rel="stylesheet" href="../styles.css">
   </head>
   <body>
+
+    <div class="text-overlay" style="bottom: 10px; left: 10px; top: auto; width: 30%;">
+      <p>10 x 10 x 10 block of voxels, rendered with an Instanced Mesh.</p>
+      <p>Pick colors from the palette and left-click to color.  Right click to delete blocks.</p>
+      <p>To rotate the blocks, hold down left / middle mouse buttons, and move the mouse.</p>
+      <p>Sorry there is no undo / delete - this is just a demo!</p>
+    </div>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/examples/coloring-blocks.html">
+      view code
+    </a>
+
     <a-scene click-listener
              stats
-             renderer="colorManagement:true">
+             renderer="colorManagement:true"
+             orbit-controls>
 
       <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: [block-events], [palette-events]">
       </a-entity>
 
-      <a-entity id="rig" movement-controls>
-        <a-entity id="camera" camera position="0 1.6 0" look-controls>
+      <a-entity id="rig">
+        <a-entity id="camera" camera position="0 1.6 0">
         </a-entity>
       </a-entity>
 
-      <a-entity id="mesh"
+      <a-entity id="palette" scale="0.4 0.4 0.4" position="0 3.5 -4" palette="width: 12; height: 4">
+        <a-entity id="palette-mesh"
                   framed-block="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
                   position = "0 0 0"
-                  instanced-mesh="capacity:1024; decompose:true; drainColor: true; positioning: world">
+                  instanced-mesh="capacity:1024; decompose:true; drainColor: true">
+        </a-entity>
       </a-entity>
 
-      <a-entity id="palette" scale="0.5 0.5 0.5" position="0 3 -4" palette="width: 6; height: 4">
-      </a-entity>
-      <a-entity scale="0.2 0.2 0.2" position="0 0.5 -4" block-stack="size:10">  
+      <a-entity mouse-object-control scale="0.2 0.2 0.2" position="0 0.5 -4" block-stack="size:10">  
+        <a-entity id="block-mesh"
+                  framed-block="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+                  position = "0 0 0"
+                  instanced-mesh="capacity:1024; decompose:true; drainColor: true">
+        </a-entity>
       </a-entity>
       
     </a-scene>

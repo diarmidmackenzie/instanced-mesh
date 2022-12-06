@@ -12,7 +12,7 @@ AFRAME.registerComponent('block-stack', {
           block.id = `block-${ii}-${jj}-${kk}`
           block.object3D.position.set(ii - size / 2, jj - size / 2, kk - size / 2)
           block.setAttribute("instanced-mesh-member",
-                             {mesh: "#mesh"})
+                             {mesh: "#block-mesh"})
           this.el.appendChild(block)
 
           const raycastProxy = document.createElement('a-box')
@@ -86,11 +86,13 @@ AFRAME.registerComponent('block-events', {
     this.mouseEnter = this.mouseEnter.bind(this)
     this.mouseLeave = this.mouseLeave.bind(this)
     this.click = this.click.bind(this)
+    this.mouseUp = this.mouseUp.bind(this)
 
     // On hover, reduce size to 0.45 unless already smaller than that.
     this.el.addEventListener('mouseenter', this.mouseEnter)
     this.el.addEventListener('mouseleave', this.mouseLeave)
     this.el.addEventListener('mousedown', this.click)    
+    this.el.addEventListener('mouseup', this.mouseUp)   
   },
 
   mouseEnter() {
@@ -113,6 +115,10 @@ AFRAME.registerComponent('block-events', {
     // don't handle click here as we can't distinguish between left & right clicks.
     // click is handled by scene-level click-listener.
     this.el.sceneEl.components['click-listener'].clickedEl = this.getRaycastTarget()
+  },
+
+  mouseUp() {
+    this.el.sceneEl.components['click-listener'].clickedEl = null
   },
 
   getRaycastTarget() {
@@ -139,7 +145,7 @@ AFRAME.registerComponent('palette', {
         block.id = `palette-${ii}`
         block.object3D.position.set(ii - width / 2, jj - height / 2, 0)
         block.setAttribute("instanced-mesh-member",
-                            {mesh: "#mesh", 
+                            {mesh: "#palette-mesh", 
                              colors: ["black", `#${color.getHexString()}`]})
         this.el.appendChild(block)
 
@@ -186,12 +192,14 @@ AFRAME.registerComponent('palette-events', {
 
   click() {
 
-    this.selectThis()
+    const selected = this.selectThis()
 
-    const el = this.getRaycastTarget()
-    if (el) {
-      el.object3D.scale.set(0.6, 0.6, 0.6)
-      el.emit('object3DUpdated')
+    if (selected) {
+      const el = this.getRaycastTarget()
+      if (el) {
+        el.object3D.scale.set(0.6, 0.6, 0.6)
+        el.emit('object3DUpdated')
+      }
     }
 
     // update scene level view of last-clicked el.
@@ -209,10 +217,61 @@ AFRAME.registerComponent('palette-events', {
       palette.selected.object3D.scale.set(1, 1, 1)
       palette.selected.emit('object3DUpdated')
     }
-    palette.selected = this.getRaycastTarget()
+
+    if (palette.selected !== this.getRaycastTarget()) {
+      palette.selected = this.getRaycastTarget()
+      return true
+    }
+    else {
+      palette.selected = null
+      return false
+    }
   },
 
   getRaycastTarget() {
     return this.el.parentEl
   }
 })
+
+AFRAME.registerComponent('mouse-object-control', {
+
+  init: function () {
+
+      this.rbDown = false;
+      this.mbDown = false;
+
+      // Mouse 2D controls.
+      this.onMouseEvent = this.onMouseEvent.bind(this);
+      window.addEventListener('mouseup', this.onMouseEvent);
+      window.addEventListener('mousedown', this.onMouseEvent);
+
+      // disable right-click context menu
+      window.addEventListener('contextmenu', event => event.preventDefault());
+  },
+
+  onMouseEvent: function (evt) {
+      this.mbDown = (evt.buttons & 4)
+      this.lbDown = (evt.buttons & 1)
+
+      this.updateRotationControls()
+  },
+
+  updateRotationControls() {
+
+      if (this.lbDown) {
+          this.el.setAttribute("mouse-pitch-yaw", "")
+          this.el.setAttribute("mouse-dolly", "")
+      }
+      else {
+          this.el.removeAttribute("mouse-pitch-yaw")
+          this.el.removeAttribute("mouse-dolly")
+      }
+      if (this.mbDown) {
+          this.el.setAttribute("mouse-roll", "")
+      }
+      else {
+          this.el.removeAttribute("mouse-roll")
+          
+      }
+  }
+});
