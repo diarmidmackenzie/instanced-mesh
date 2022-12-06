@@ -12,7 +12,7 @@
              stats
              renderer="colorManagement:true">
 
-      <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: [raycast-events]">
+      <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: [block-events], [palette-events]">
       </a-entity>
 
       <a-entity id="rig" movement-controls>
@@ -20,12 +20,15 @@
         </a-entity>
       </a-entity>
 
-      <a-entity scale="0.2 0.2 0.2" position="0 0.5 -4" block-stack="size:10">
-        <a-entity id="mesh"
+      <a-entity id="mesh"
                   framed-block="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
                   position = "0 0 0"
-                  instanced-mesh="capacity:1000; decompose:true; drainColor: true">
-        </a-entity>
+                  instanced-mesh="capacity:1024; decompose:true; drainColor: true; positioning: world">
+      </a-entity>
+
+      <a-entity id="palette" scale="0.5 0.5 0.5" position="0 3 -4" palette="width: 6; height: 4">
+      </a-entity>
+      <a-entity scale="0.2 0.2 0.2" position="0 0.5 -4" block-stack="size:10">  
       </a-entity>
       
     </a-scene>
