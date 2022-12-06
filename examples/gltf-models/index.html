@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>    
+    <script src="../../src/instanced-mesh.js"></script>    
+    <script src="./vehicles.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <div class="text-overlay">
+      <p>A large instanced mesh with 1000 instances of a GLTF, updateMode: auto.  The GLTF itself has 12 parts - hence the 14 draw calls in total (cars, roads, green base)</p>
+    </div>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/examples/gltf-models/index.html">
+      view code
+    </a>
+    <a-scene background="color: black"
+             vr-mode-ui="enabled: false" stats>
+      <a-assets>
+        <a-asset-item id="car-model" src="./car.gltf"></a-asset-item>
+      </a-assets>
+
+      <a-entity id="car-instanced-mesh"
+                gltf-model="#car-model"
+                instanced-mesh="capacity:1000;
+                                positioning: world;
+                                updateMode: auto;
+                                drainColor: true">
+      </a-entity>
+
+      <a-entity id="camera-rig" rotation="30 0 0">
+        <a-entity look-controls>
+          <a-entity id ="game-camera" position="0 50 80" camera="fov:35; near: 20" rotation = "-27 -10 0">
+          </a-entity>
+        </a-entity>
+      </a-entity>
+    
+      <a-entity id="gameArea">
+        <a-box color="green" position="0 -1 0" width="500" depth="500">
+        </a-box>
+        <a-entity landscape="numRoads:100; multicolor: true" position="-150 0 0 0">
+          <a-box id="road-mesh"
+             instanced-mesh="capacity:200"
+             color="black"
+             depth="500"
+             width="2">
+          </a-box>
+        </a-entity>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
