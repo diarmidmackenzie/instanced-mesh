@@ -20,7 +20,13 @@ Example showing raycasting, member coloring & member deletion - [View Example](h
 
 <img src="image-20221206124129079.png" alt="image-20221206124129079" style="zoom:50%;" />
 
-For examples of Instanced Mesh in production, see our [Showcase](https://diarmidmackenzie.github.io/instanced-mesh/showcase/)
+An example showing Instancing + Physics, using either the [Ammo driver](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-ammo.html) or [Cannon driver](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-cannon.html) from [aframe-physics-system](https://github.com/c-frame/aframe-physics-system#readme)
+
+<img src="image-20221206125351164.png" alt="image-20221206125351164" style="zoom:50%;" />
+
+
+
+For examples of A-Frame Instanced Mesh in production, see our [Showcase](https://diarmidmackenzie.github.io/instanced-mesh/showcase/)
 
 
 
