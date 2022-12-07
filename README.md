@@ -225,10 +225,6 @@ On the mesh:
 
 - Transparency & Opacity.
 
-On the member entity:
-
-- Direct updates to object3D.matrix (position, rotation or scale) - mus be followed by an object3DUpdated event if not in "auto" update mode.
-
 
 
 ## Physics & Raycasting
