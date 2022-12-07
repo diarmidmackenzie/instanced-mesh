@@ -67,6 +67,8 @@ AFRAME.registerComponent('instanced-mesh', {
 
     // Used when setting color attributes in instanced meshes.
     this.color = new THREE.Color()
+
+    this.addOnBeforeRenderToScene()
   },
 
   attachEventListeners: function() {
@@ -782,20 +784,22 @@ AFRAME.registerComponent('instanced-mesh', {
       // No further pending removals.
       this.membersToRemove = [];
 
-      // Diags: Dump full matrix of x/y positions:
-      //for (var jj = 0; jj < this.members; jj++) {
-        //console.log(`x: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 12]}, y: ${this.instancedMesh.instanceMatrix.array[jj * 16 + 13]}`);
-      //}
-
-      console.log("Removals done");
+      //console.log("Removals done");
     }
+  },
+
+  // perform any updates needed ahead of rendering
+  // - in auto update mode, update all matrices
+  // - (TO DO) manual update mode, update those 
+  // Because this is called via scene.onBeforeRender(), all object3D matrices can be assumed
+  // to be up-to-date.
+  prerender() {
 
     if (this.autoMode) {
 
       // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
       const parent = this.el.object3D.parent
       const parentInverse = this.parentWorldMatrixInverse
-      parent.updateWorldMatrix();
       parentInverse.copy(parent.matrixWorld)
       parentInverse.invert()
 
@@ -809,6 +813,21 @@ AFRAME.registerComponent('instanced-mesh', {
         }
       }; 
     }
+  },
+
+  addOnBeforeRenderToScene() {
+    const scene = this.el.sceneEl.object3D
+    this.oldOnBeforeRender = scene.onBeforeRender
+    scene.onBeforeRender = this.onBeforeRender.bind(this)
+  },
+
+  onBeforeRender(renderer, scene, camera, geometry, material, group) {
+    
+    if (this.oldOnBeforeRender) {
+      this.oldOnBeforeRender(renderer, scene, camera, geometry, material, group)
+    }
+
+    this.prerender()
   }
 });
 
