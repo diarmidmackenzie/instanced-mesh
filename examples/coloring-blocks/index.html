@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/aframe-examples@latest/components/mouse-manipulation.min.js"></script>
+    <script src="../../src/instanced-mesh.js"></script>
+    <script src="./framed-block.js"></script>
+    <script src="./block-stack.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+
+    <div class="text-overlay" style="bottom: 10px; left: 10px; top: auto; width: 30%;">
+      <p>10 x 10 x 10 block of voxels, rendered with an Instanced Mesh.</p>
+      <p>Pick colors from the palette and left-click to color.  Right click to delete blocks.</p>
+      <p>To rotate the blocks, hold down left / middle mouse buttons, and move the mouse.</p>
+      <p>Sorry there is no undo / delete - this is just a demo...</p>
+      <p>Happy sculpting & coloring!</p>
+    </div>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/examples/coloring-blocks.html">
+      view code
+    </a>
+
+    <a-scene background="color: #88a"
+             click-listener
+             stats
+             renderer="colorManagement:true"
+             orbit-controls>
+
+      <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: [block-events], [palette-events]">
+      </a-entity>
+
+      <a-entity id="rig">
+        <a-entity id="camera" camera position="0 1.6 0">
+        </a-entity>
+      </a-entity>
+
+      <!-- This example uses two separate instanced meshes for the palette and the blocks
+           The reason for this is to enable rotation of the blocks using mouse-object-control
+           This could be achieved using a single mesh using "updateMode: auto"
+           but that would mean every block matrix being updated every frame, which would have a significant 
+           performance hit.
+           This example uses the framnmed-block-vx component, which uses vertex coloring to allow the block to
+           be rendered with a single draw call.
+           So each mesh uses 1 draw call - 2 in total for the scene-->
+      <a-entity id="palette" scale="0.4 0.4 0.4" position="0 3.5 -4" palette="width: 12; height: 4">
+        <a-entity id="palette-mesh"
+                  framed-block-vx="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+                  position = "0 0 0"
+                  instanced-mesh="capacity:48; drainColor: true">
+        </a-entity>
+      </a-entity>
+
+      <a-entity mouse-object-control scale="0.2 0.2 0.2" position="0 0.5 -4" block-stack="size:10">  
+        <a-entity id="block-mesh"
+                  framed-block-vx="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
+                  position = "0 0 0"
+                  instanced-mesh="capacity:1000; drainColor: true">
+        </a-entity>
+      </a-entity>
+      
+    </a-scene>
+  </body>
+</html>

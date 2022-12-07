@@ -2,23 +2,23 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>    
-    <script src="../src/instanced-mesh.js"></script>    
-    <script src="./components/vehicles.js"></script>
-    <link rel="stylesheet" href="./styles.css">
+    <script src="../../src/instanced-mesh.js"></script>    
+    <script src="./vehicles.js"></script>
+    <link rel="stylesheet" href="../styles.css">
   </head>
   <body>
     <div class="text-overlay">
-      <p>A large instanced mesh with 1000 instances of a GLTF.  The GLTF itself has 12 parts.  Hold left mouse button and drag to look around.</p>
-      <p>This uses updateMode: auto to efficiently update transforms of all instances in the mesh, every frame.</p>
+      <p>A large instanced mesh with 1000 instances of a GLTF, updateMode: auto.  The GLTF itself has 12 parts - hence the 14 draw calls in total (cars, roads, green base)</p>
     </div>
     <a class="code-link"
       target="_blank"
-      href="https://github.com/diarmidmackenzie/instanced-mesh/tests/3d-models-scale-movement.html">
+      href="https://github.com/diarmidmackenzie/instanced-mesh/examples/gltf-models/index.html">
       view code
     </a>
-    <a-scene vr-mode-ui="enabled: false" stats>
+    <a-scene background="color: black"
+             vr-mode-ui="enabled: false" stats>
       <a-assets>
-        <a-asset-item id="car-model" src="./assets/car.gltf"></a-asset-item>
+        <a-asset-item id="car-model" src="./car.gltf"></a-asset-item>
       </a-assets>
 
       <a-entity id="car-instanced-mesh"
@@ -29,7 +29,6 @@
                                 drainColor: true">
       </a-entity>
 
-      <a-sky color="black"></a-sky>
       <a-entity id="camera-rig" rotation="30 0 0">
         <a-entity look-controls>
           <a-entity id ="game-camera" position="0 50 80" camera="fov:35; near: 20" rotation = "-27 -10 0">
