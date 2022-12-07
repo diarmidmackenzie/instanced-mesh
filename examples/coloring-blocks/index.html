@@ -36,6 +36,14 @@
         </a-entity>
       </a-entity>
 
+      <!-- This example uses two separate instanced meshes for the palette and the blocks
+           The reason for this is to enable rotation of the blocks using mouse-object-control
+           This could be achieved using a single mesh using "updateMode: auto"
+           but that would mean every block matrix being updated every frame, which would have a significant 
+           performance hit.
+           This example uses the framnmed-block-vx component, which uses vertex coloring to allow the block to
+           be rendered with a single draw call.
+           So each mesh uses 1 draw call - 2 in total for the scene-->
       <a-entity id="palette" scale="0.4 0.4 0.4" position="0 3.5 -4" palette="width: 12; height: 4">
         <a-entity id="palette-mesh"
                   framed-block-vx="facecolor: white; framecolor: black; height:1;width:1;depth:1;frame:0.1"
