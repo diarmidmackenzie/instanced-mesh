@@ -564,7 +564,6 @@ AFRAME.registerComponent('instanced-mesh', {
         mesh.instanceColor.needsUpdate = true;
       }
 
-      mesh.instanceColor.needsUpdate = true;
       mesh.instanceMatrix.needsUpdate = true;
     });
   },
