@@ -32,6 +32,10 @@ AFRAME.registerComponent('instanced-mesh', {
     // multiple entries.
     this.membersToRemove = [];
 
+    // List of members that need matrix/color updates.  These updates are deferred to 
+    // the rendering stage, to avoid unecessary re-computations of matrices.
+    this.membersToUpdate = new Set();
+
     // Ordered list of member entity IDs.  This matches order in the Instanced
     // Mesh matrix list.  Needed so that we can delete elements on request.
     // I have not thought very deeply about performance of an array vs. e.g. an
@@ -510,7 +514,8 @@ AFRAME.registerComponent('instanced-mesh', {
       this.orderedMembersList.push(member);
     }
 
-    this.updateMatricesFromMemberObject(member.object3D, index, this.autoMode);
+    // flag this member as needing an update.
+    this.membersToUpdate.add(member)
 
     // Diags: Dump full matrix of x/y positions:
     //for (var jj = 0; jj < this.members; jj++) {
@@ -529,16 +534,10 @@ AFRAME.registerComponent('instanced-mesh', {
   // For a given index position, across all instanced meshes, update the
   // matrices to match the transform of the member object
   // (provided in the object3D)
-  updateMatricesFromMemberObject(object3D, index, auto) {
+  updateMatricesFromMemberObject(object3D, index) {
 
-    let matrix
-    if (auto) {
-      matrix = this.matrixFromMemberObjectAuto(object3D);
-    }
-    else {
-      matrix = this.matrixFromMemberObjectManual(object3D);
-    }
-
+    const matrix = this.matrixFromMemberObject(object3D);
+    
     // don't output console logs for matrix updates in auto mode - too verbose.
     const debug = (this.debug && !this.autoMode)
     const componentMatrix = this.componentMatrix;
@@ -599,42 +598,11 @@ AFRAME.registerComponent('instanced-mesh', {
 
   // Get the matrix to add to an instanced mesh from an object 3D
   // allowing for positioning style (local or world)
-  // This version used for Manual updates - it ensures data is up-to-date
-  // for computations.
-  matrixFromMemberObjectManual: function(object3D) {
-
-    if (this.localPositioning) {
-
-      object3D.updateMatrix()
-      return object3D.matrix;
-    }
-    else
-    {
-      const parent = this.el.object3D.parent
-      const parentInverse = this.parentWorldMatrixInverse
-      // Don't understand why this is necessaty.
-      // parent.updateWorldMatrix() which updates the parent's worlDMatrix ought to be sufficient
-      // But only parent.updateMatrixWorld() seems to get everything into the right state.
-      // Even parent.updateWorldMatrix(true, true), which seems more-or-less equivalent doesn't work.
-      // Some careful testing needed to figure this out & find the optimal solution.
-      // Issue being that parent.updateWorldMatrix() is quite performance-intensive.
-      parent.updateMatrixWorld()
-      parentInverse.copy(parent.matrixWorld)
-      parentInverse.invert()
-      
-      // matrix used for working...
-      const matrix = this.matrix
-      matrix.multiplyMatrices(parentInverse, object3D.matrixWorld) 
-      return matrix;
-    }
-  },
-
-  // Get the matrix to add to an instanced mesh from an object 3D
-  // allowing for positioning style (local or world)
-  // This version used for Auto updates - it does not ensures data is up-to-date
-  // for computations, based on the fact that the data will be updated again the 
-  // in the next frame.
-  matrixFromMemberObjectAuto: function(object3D) {
+  // This version assumes that object3D matrices are all up-to-date, and 
+  // this.parentWorldMatrixInverse is set to the inverse of the world matrix of the parent of
+  // this instanced mesh.
+  // Hence this should only be invoked on an onBeforeRender() callback, and not at other times.
+  matrixFromMemberObject: function(object3D) {
 
     if (this.localPositioning) {
       return object3D.matrix;
@@ -656,16 +624,8 @@ AFRAME.registerComponent('instanced-mesh', {
       return;
     }
 
-    // Not yet thought about transitations between frames of reference
-    // Just assume all in same FOR for now..
     const member = event.detail.member;
-    const index = this.orderedMembersList.findIndex(x => (x === member));
-
-    if (index == -1) {
-      console.error(`Member ${member.id} not found for modification`)
-    }
-
-    this.updateMatricesFromMemberObject(event.detail.member.object3D, index, this.autoMode);
+    this.membersToUpdate.add(member)
   },
 
   memberRemoved: function(event) {
@@ -795,23 +755,34 @@ AFRAME.registerComponent('instanced-mesh', {
   // to be up-to-date.
   prerender() {
 
+    if (!this.autoMode && this.membersToUpdate.size === 0) return;
+
+    // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
+    const parent = this.el.object3D.parent
+    const parentInverse = this.parentWorldMatrixInverse
+    parentInverse.copy(parent.matrixWorld)
+    parentInverse.invert()
+
     if (this.autoMode) {
-
-      // update this.parentWorldMatrixInverse, which will be used in matrix calculations.
-      const parent = this.el.object3D.parent
-      const parentInverse = this.parentWorldMatrixInverse
-      parentInverse.copy(parent.matrixWorld)
-      parentInverse.invert()
-
       const list = this.orderedMembersList
       const members = this.members
       for (let ii = 0; ii < members; ii++) {
         const object = list[ii].object3D
         
         if (object) {
-          this.updateMatricesFromMemberObject(object, ii, true);
+          this.updateMatricesFromMemberObject(object, ii);
         }
       }; 
+    }
+    else {
+      this.membersToUpdate.forEach((member) => {
+        const index = this.orderedMembersList.findIndex(x => (x === member));
+        if (index == -1) {
+          console.error(`Member ${member.id} not found for modification`)
+        }
+        this.updateMatricesFromMemberObject(member.object3D, index);
+      })
+      this.membersToUpdate.clear()
     }
   },
 
