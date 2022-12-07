@@ -6,7 +6,7 @@ Here are some examples of what can be done using A-Frame Instanced Mesh...
 
 1000 x 12-part GLTF models in a single scene, rendered with just 14 draw calls - [View Example](https://diarmidmackenzie.github.io/instanced-mesh/examples/gltf-models/index.html)
 
-<img src="C:\Users\ASUS\AppData\Roaming\Typora\typora-user-images\image-20221205162651198.png" alt="image-20221205162651198" style="zoom:50%;" />
+<img src="image-20221205162651198.png" alt="image-20221205162651198" style="zoom:50%;" />
 
 
 

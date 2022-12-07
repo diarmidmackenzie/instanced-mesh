@@ -4,7 +4,7 @@ This page showcases live games, experiences and other products that use A-Frame 
 
 ### Blocks Arcade
 
-Blacks Arcade is a VR-focused arcade full of 2D & 3D falling blocks games.  I built it as a part of my learning journey with A-Frame and 3D Web, and it provided my original motivation for building an Instancing component for A-Frame.
+[Blocks Arcade](https://blocksarcade.xyz/) is a VR-focused arcade full of 2D & 3D falling blocks games.  I built it as a part of my learning journey with A-Frame and 3D Web, and it provided my original motivation for building an Instancing component for A-Frame.
 
 <img src="image-20221205164019411.png" alt="image-20221205164019411" style="zoom:50%;" />
 
