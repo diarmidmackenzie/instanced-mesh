@@ -579,8 +579,8 @@ AFRAME.registerComponent('instanced-mesh', {
     // the color index to look up on the mesh member.
     const colorIndex = this.componentMaterialIndices[componentIndex]
 
-    // safe to assume member has an instanced-mesh-member component.
-    let colors = member.el.components['instanced-mesh-member'].data.colors
+    // ?. operator guards for race conditions around deletion of members.
+    let colors = member.el?.components['instanced-mesh-member']?.data.colors
 
     if (colors && colors.length > colorIndex) {
       // member has specified a color for the relevant index.
