@@ -1,5 +1,9 @@
 # instanced-mesh
-A set of components to support use of three.js InstancedMesh object within A-Frame, which can dramatically improve rendering performance where a multiple identical objects are being used.
+A set of components to support use of three.js InstancedMesh object within A-Frame, which can dramatically improve rendering performance where a multiple identical geometries are being used.
+
+![image-20221207100536410](image-20221207100536410.png)
+
+The key goal of these components is to make use of instancing within A-Frame as simple as possible, and as similar as possible to working with regular non-instanced entities.
 
 ## Overview
 
@@ -7,7 +11,7 @@ The three.js [InstancedMesh](https://threejs.org/docs/index.html#api/en/objects/
 
 A-Frame does not natively provide access to InstancedMesh, and the A-Frame DOM doesn't map very naturally across to Instanced Meshes.
 
-This component intends to provide a way for A-Frame applications to make use of Instanced Mesh, while retaining maximum flexibility in how entities are organized within the A-Frame DOM.
+This component intends to provide a way for A-Frame applications to make use of Instanced Meshes, while continuing to use A-Frame entities in the same way they would normally.
 
 ## Installation
 
