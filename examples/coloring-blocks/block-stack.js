@@ -71,7 +71,7 @@ AFRAME.registerComponent('click-listener', {
       colors = selected.components["instanced-mesh-member"].colors
     }
     else {
-      colors = "black, white"
+      colors = "white"
     }
     
     return colors
@@ -146,7 +146,7 @@ AFRAME.registerComponent('palette', {
         block.object3D.position.set(ii - width / 2, jj - height / 2, 0)
         block.setAttribute("instanced-mesh-member",
                             {mesh: "#palette-mesh", 
-                             colors: ["black", `#${color.getHexString()}`]})
+                             colors: [`#${color.getHexString()}`]})
         this.el.appendChild(block)
 
         const raycastProxy = document.createElement('a-box')
@@ -200,7 +200,7 @@ AFRAME.registerComponent('palette-events', {
         el.object3D.scale.set(0.6, 0.6, 0.6)
         el.emit('object3DUpdated')
       }
-    }
+    } 
 
     // update scene level view of last-clicked el.
     this.el.sceneEl.components['click-listener'].clickedEl = this.getRaycastTarget()
