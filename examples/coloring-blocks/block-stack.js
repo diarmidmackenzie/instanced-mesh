@@ -1,3 +1,4 @@
+// Create a cube of blocks of given dimension
 AFRAME.registerComponent('block-stack', {
   schema: {
     size: {type: 'number', default: 10 }
@@ -26,6 +27,44 @@ AFRAME.registerComponent('block-stack', {
   }
 })
 
+// Create a rectangle of colored blocks that can be used as a palette.
+AFRAME.registerComponent('palette', {
+  schema: {
+    height: {type: 'number', default: 4 },
+    width: {type: 'number', default: 6 }
+  },
+
+  init() {
+    const width = this.data.width
+    const height = this.data.height
+    for (let ii = 0; ii < width; ii++) {
+      for (let jj = 0; jj < height; jj++) {
+        
+        const color = new THREE.Color()
+        color.setHSL(ii / width, (jj + 1) / height, 0.5)
+
+        const block = document.createElement('a-entity')
+        block.id = `palette-${ii}`
+        block.object3D.position.set(ii - width / 2, jj - height / 2, 0)
+        block.setAttribute("instanced-mesh-member",
+                            {mesh: "#palette-mesh", 
+                             colors: [`#${color.getHexString()}`]})
+        this.el.appendChild(block)
+
+        const raycastProxy = document.createElement('a-box')
+        raycastProxy.object3D.visible = false
+        raycastProxy.setAttribute("palette-events", "")
+        
+        block.appendChild(raycastProxy)
+      }
+    }
+  }
+})
+
+// Window level click listenr.  Needed because we can't distinguish between
+// left & right clicks on the click events from cursor.
+// We can simplify this in A-Frame 1.4.0 thanks to this PR 
+// https://github.com/aframevr/aframe/pull/5088
 AFRAME.registerComponent('click-listener', {
 
   init() {
@@ -123,39 +162,6 @@ AFRAME.registerComponent('block-events', {
 
   getRaycastTarget() {
     return this.el.parentEl
-  }
-})
-
-AFRAME.registerComponent('palette', {
-  schema: {
-    height: {type: 'number', default: 4 },
-    width: {type: 'number', default: 6 }
-  },
-
-  init() {
-    const width = this.data.width
-    const height = this.data.height
-    for (let ii = 0; ii < width; ii++) {
-      for (let jj = 0; jj < height; jj++) {
-        
-        const color = new THREE.Color()
-        color.setHSL(ii / width, (jj + 1) / height, 0.5)
-
-        const block = document.createElement('a-entity')
-        block.id = `palette-${ii}`
-        block.object3D.position.set(ii - width / 2, jj - height / 2, 0)
-        block.setAttribute("instanced-mesh-member",
-                            {mesh: "#palette-mesh", 
-                             colors: [`#${color.getHexString()}`]})
-        this.el.appendChild(block)
-
-        const raycastProxy = document.createElement('a-box')
-        raycastProxy.object3D.visible = false
-        raycastProxy.setAttribute("palette-events", "")
-        
-        block.appendChild(raycastProxy)
-      }
-    }
   }
 })
 
