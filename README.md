@@ -29,9 +29,7 @@ Or via JSDelivr CDN (check the releases in the repo for the best version number 
 <script src="https://cdn.jsdelivr.net/gh/diarmidmackenzie/instanced-mesh@v0.6.0/src/instanced-mesh.min.js"></script>
 ```
 
-Or available on npm as aframe-instanced-mesh:
-
-https://www.npmjs.com/package/aframe-instanced-mesh
+Or available on npm as [aframe-instanced-mesh](https://www.npmjs.com/package/aframe-instanced-mesh):
 
 
 
@@ -72,7 +70,7 @@ See [this page](	https://diarmidmackenzie.github.io/instanced-mesh/examples) for
 
 This should be configured on an entity that describes the desired geometry and materials of the members of the Instanced Mesh.  The entity *must* be configured with an id.
 
-This entity should be in the same Frame of Reference as all the members of this mesh.  (if all members of the mesh are not in the same Frame of Reference, use multiple Instanced Meshes!)
+For performance and simplicity, this entity should preferaly be in the same Frame of Reference as all the members of this mesh (but this is not essential - see ["notes on positioning"](#markdown-header-notes-on-positioning) below).
 
 Configuration as follows:
 
@@ -81,16 +79,16 @@ Configuration as follows:
 | capacity    | number                                         | The number of members that can be in this mesh.  Excess capacity has a modest overhead in memory usage, and no impact on rendering costs.    If you exceed this capacity, you'll get a console warning, and the last requested object will simply not be rendered. | 100      |
 | fcradius    | number                                         | The radius for the bounding Sphere used for Frustrum Culling.  Default is 0, which means no frustrum culling occurs.  When specified with a positive value, frustrum culling is enabled on the mesh using a bounding sphere with this radius, and center fccenter (next property).  If set zero or negative, there is no frustrum culling, and the whole mesh is rendered the whole time, even when off camera.  Note that frustrum culling is all-or-nothing, applied to the whole mesh.  Frustrum culling of individual members is not possible. | 0        |
 | fccenter    | vec3                                           | The center for the bounding Sphere used for Frustrum Culling.  This is only meaningful if fcradius is specified with a value greater than 0.  The format is 3 co-ordinates, separated with spaces (like a position), representing the X, Y and Z co-ordinates.  These co-ordinates are interpreted in the local position space of the entity the instanced-mesh is applied on (which may be different from world space). | none     |
-| positioning | "local" or "world"                             | The positioning mode used for members in the mesh, one of:<br /> - **local**: the member objects and the instanced mesh are assumed to be in the same position in the scene graph, and hence in the same frame of reference for position, scale & orientation.  The transform matrix for each member object is used naively to set the transform matrix for the instance in the instanced mesh. <br /><br />- **world**: the member objects and the instanced mesh may be in different positions in the scene graph.  The transform matrix for each member object is transformed into a world matrix, and then into the frame of reference of the instanced mesh | "local"  |
-| layers      | String of comma-separated numbers, e.g. "0, 1" | A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component<br /> Note that the A-Frame Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component.no | none     |
+| positioning | "local" or "world"                             | The positioning mode used for members in the mesh, one of:<br /> - **local**: the member objects and the instanced mesh are assumed to be in the same position in the scene graph, and hence in the same frame of reference for position, scale & orientation.  The transform matrix for each member object is used naively to set the transform matrix for the instance in the instanced mesh. <br /><br />- **world**: the member objects and the instanced mesh may be in different positions in the scene graph.  The transform matrix for each member object is transformed into the frame of reference of the instanced mesh.  Note that if these frames of reference change positions relative to each other, the positions of the mesh members will only be updated in "auto" mode, or via the object3DUpdated event. | "local"  |
+| layers      | String of comma-separated numbers, e.g. "0, 1" | A string listing the layers in which the Instanced Mesh should be rendered (affects the entire mesh).  A string like "0, 1" to render in layers 0 & 1.  Default is "", which leaves the default behaviour in place (equivalent to setting layers:"0", except that the latter would explicitly set them to 0, rather them leaving them unchanged).  For more on THREE.js layers see https://threejs.org/docs/index.html#api/en/core/Layers and https://github.com/bryik/aframe-layers-component<br /> Note that bryik's Layers component doesn't work with Instanced Meshes, which is why layers support has been added directly to this component. | none     |
 | debug       | boolean                                        | Enables some debug console logs.  If you have a large number of dynamic objects, this will hurt performance.<br />For debug logs to be useful, it is recommended to configure IDs on the instance mesh member entities, as well as the mesh entity itself. | false    |
-| updateMode  | "manual" or "auto"                             | How to handle updates to the positions of instanced members.<br />- **manual**: transforms of members of the instanced mesh are only updated when the object3DUpdated event is emitted on that instanced mesh member.<br />- **auto**: transforms of all members of the instanced mesh are automatically updated every frame.<br />Manual updates generally perform better and are recommended in most and especially when the mesh members are static.  The exception is when you expect most member transforms to update most frames (e.g. a collection of dynamic physics bodies), in which case automatic updates are likely to perform better | "manual" |
+| updateMode  | "manual" or "auto"                             | How to handle updates to the positions of instanced members.<br />- **manual**: transforms of members of the instanced mesh are only updated when the object3DUpdated event is emitted on that instanced mesh member.<br />- **auto**: transforms of all members of the instanced mesh are automatically updated every frame.<br />When the mesh members are static, or mostly static, manual updates generally perform better and are recommended.  If you expect many member transforms to update most frames (e.g. a collection of dynamic physics bodies), automatic updates are likely to perform better. | "manual" |
 | decompose   | boolean                                        | When this is set, a geometry that contains multiple [groups](https://threejs.org/docs/?q=in#api/en/core/BufferGeometry.groups) will be decomposed into multiple Instanced Meshes.  The main reason you'd want to do this is to apply different colors to each group for different members of the mesh (see the `colors` property on `instanced-mesh-member`).  Usually if you set this, you'll also want to set `drainColor: true`, see below. | false    |
-| drainColor  | boolean                                        | When this is set, the color on the instanced mesh's material is set to white, and color is set explicitly for each member.  Colors are set using the `colors` property on `instanced-mesh-member`, although where there is no color specified on a member, the default color is re-instated.<br />Note that if colors are drained on an instanced mesh that supports multiple materials (via groups configured on the geometry), then it should be decomposed using `decompose: true` , see above.  If the mesh is not decomposed, then it is not possible to re-instate colors at the member level.  In such a configuration, a console warning is generated, and the mesh is rendered in a grey color. | false    |
+| drainColor  | boolean                                        | When this is set, the color on the instanced mesh's material is set to white, and color is set explicitly for each member.  Colors are set using the `colors` property on `instanced-mesh-member`, but where there is no color specified on a member, the default color is re-instated.<br />Note that if colors are drained on an instanced mesh that supports multiple materials (via groups configured on the geometry), then it should be decomposed using `decompose: true` , see above.  If the mesh is not decomposed, then it is not possible to re-instate colors at the member level.  In such a configuration, a console warning is generated, and the mesh is rendered in a grey color. | false    |
 
 #### Notes on positioning
 
-instanced-mesh supports 2 positioning modes, "local" and "world" as described above.
+`instanced-mesh` supports two positioning modes, "local" and "world" as described above.
 
 Local positioning does not require any matrix transformations, and will typically perform better.  However, it can only be used when the instanced mesh and the members are at the same position in the scene graph (i.e. in the same frame of reference for position, orientation and scale).  If this is not the case, instanced mesh members position, orientation and scale will not match those of the member objects.
 
@@ -116,11 +114,11 @@ Configuration as follows:
 
 
 
-In order to ensure that changes are synchronized to the mesh, a custom event, "object3DUpdated" *must* be emitted on this entity whenever the entity's object3D configuration is updated - see next section.
+In "manual" update mode, a custom event, "object3DUpdated" *must* be emitted on this entity whenever the entity's object3D configuration is updated, to ensure that changes are synchronized to the mesh - see next section.
 
 ### object3DUpdated Event
 
-When operating in "manual" update mode, the object3DUpdated event is very important.  It is not required when running in "automatic" update mode.
+When operating in "manual" update mode, the object3DUpdated event is very important.  It is not required when running in "auto" update mode.
 
 This event must be emitted on any entity that uses the instanced-mesh-member component, whenever that entity's object3D settings are updated.
 
@@ -128,6 +126,7 @@ Specifically, this must be done:
 
 - whenever the object's position, rotation or scale are modified.
 - whenever the object's visibility state changes (visible = true/false)
+- whenever the object's color changes.
 
 If this event is not emitted, the Instanced Mesh won't be updated with the change, and the rendered object will no become out of sync with what is set on the object.
 
@@ -170,10 +169,9 @@ This can simply be replaced by the following - and the entities that make use of
              instanced-mesh-member="mesh:#mesh-red-box"
              scale="0.1 0.1 0.1">
     </a-mixin>
-(*) Two modifications that may be needed:
+(*) One modification that may be needed:
 
-- Every entity must have an id that is unique within the mesh
-- Any code that modifies object3D properties must be updated to emit the object3DUpdated event, as per above.
+- If using "manual" update mode (the default), any code that modifies object3D properties must be updated to emit the object3DUpdated event, as per above.
 
 
 
@@ -241,6 +239,7 @@ Typical uses for this are:
 - For physics body configuration.  Physics engines like [aframe-physics-system](https://github.com/c-frame/aframe-physics-system) and [physx](https://github.com/c-frame/physx) typically derive physics body shapes automatically from an entity's mesh.  When using instancing, this same functionality can be made available by configuring `memberMesh` on an instanced mesh member.
   - Note: this function is not yet working for PhysX, and has some caveats for Cannon.  See [issue #15](https://github.com/diarmidmackenzie/instanced-mesh/issues/15) for details.
 
+It's worth noting that using `memberMesh` is just one option here.  You could also manually create a simplified invisible child mesh for raycasting (as in [this example](https://diarmidmackenzie.github.io/instanced-mesh/examples/coloring-blocks/index.html)), or manually specify the physics shape to use (as done for the balls in [this example](https://diarmidmackenzie.github.io/instanced-mesh/tests/physics-ammo.html))
 
 [THREE.js InstancedMesh](https://threejs.org/docs/#api/en/objects/InstancedMesh) does support raycasting directly against the instanced mesh.  That functionality is not used by this implementation for several reasons:
 
@@ -265,11 +264,9 @@ Instanced Meshes can also be used for objects that:
 
 For infrequent changes, "manual" update mode with object3DUpdated events will give the best performance.  For frequent changes across a large population of mesh members, "auto" update mode will perform better.
 
-In theory Instanced Meshes also allow for color variation between instances, but this only works for single-color objects, and isn't yet supported in this component.
-
 An Instanced Mesh requires the same number of draw calls for the entire set of instances, that would be required for a single object.  Therefore even if you only have 2 instances of an object, an Instanced Mesh could reduce the number of draw calls required.  However you'll get the greatest impact if you prioritize the objects with the most instances first.
 
-For objects that are dynamic (either in terms of movement/rotation/scale, or creation/deletion), Instanced Mesh gives the same benefits in terms of rendering, but there is also an additional cost in keeping the Instanced Mesh in sync with the A-Frame entities.  
+For objects that are dynamic (either in terms of movement/rotation/scale, or creation/deletion), Instanced Mesh gives the same benefits in terms of rendering.  There is also an additional cost in keeping the Instanced Mesh in sync with the A-Frame entities,but in most cases this is substantially outweighed by the rendering savings (even if every object moves on every frame).
 
 Creation, and especially deletion are a bit more expensive, but it's unless the lifecycle is extremely fast, it's likely that you'll see some gains from Instanced Mesh.  Hopefully it's straightforward to try it out, see what the gains are like, and remove it if it's not making enough of a difference.
 
@@ -277,31 +274,9 @@ Creation, and especially deletion are a bit more expensive, but it's unless the 
 
 Ideally, you'd use a single Instanced Mesh for all instances of a particular object.  However there are a few reasons why you might want to split your objects between multiple Instanced Meshes, or not include some entities in the Instanced Mesh at all...
 
-1. Different colored objects.  Three.js InstancedMesh can support different colors for different instances, but that's not supported by this component yet.  In any case, it only works for single-colored objects.  An Instanced Mesh *can* be used with multi-colored objects (see many of the examples in /tests/ which mostly use 2-material objects), but you need a separate Instanced Mesh for each set of colors (e.g. red+ black, yellow+black etc.)
-
-2. Separation of objects / avoidance of complexity.  When entities are rendered via an Instanced Mesh, rather than direct A-Frame rendering, this adds a level of complexity.  If objects aren't behaving as expected, it makes debugging and diagnosis of problems more complex, and increases the risk of interactions between otherwise separated parts of your scene.  This is particularly true if everything is piled into a small number of communal Instanced Meshes.  This may be best for performance, but it may become much harder to figure out what is going on, when things don't act as you expect.
+1. Separation of objects / avoidance of complexity.  When entities are rendered via an Instanced Mesh, rather than direct A-Frame rendering, this adds a level of complexity.  If objects aren't behaving as expected, it makes debugging and diagnosis of problems more complex, and increases the risk of interactions between otherwise separated parts of your scene.  This is particularly true if everything is piled into a small number of communal Instanced Meshes.  This may be best for performance, but it may become much harder to figure out what is going on, when things don't act as you expect.
 
 4. If you wish to use Frustrum Culling, it can only be applied to an entire Instanced Mesh.  Therefore if you have clusters of the same object, in multiple different areas, it may make sense to use different Instanced Meshes, so that one cluster can be frustrum culled, without affecting the other.
-
-
-
-#### An illustrative Example...
-
-To illustrate with an example, this component was originally developed to support a [Tetris game](https://github.com/diarmidmackenzie/tetrisland), in which:
-
-- each Arena contained a large number of blocks of different colors
-- there were multiple gameplay Arenas within the overall scene.
-
-My current implementation uses:
-
-- Separate Instanced Meshes for each arena (for reasons 2 & 3)
-- Within each Arena, separate Instanced Meshes for each block color (for reason 1)
-- Frustrum Culling applied to Instanced Meshes within each arena.
-- No Instanced Mesh at all for blocks that are currently in play.  Only those that have landed in the arena are incorporated into Instanced Meshes.
-
-With these decisions, I've been striking a balance between performance and complexity.  Initially I kept the arenas separate for reasons of complexity.  But subsequently, this separation has allowed for effective frustrum culling to be set up, which has further boosted performance.
-
-There are still a relatively large number of Instanced Meshes, but is not currently an issue, as performance is now bottlenecked by the number of triangles being rendered, rather than by the number of three.js calls.
 
 
 
@@ -309,18 +284,10 @@ There are still a relatively large number of Instanced Meshes, but is not curren
 
 The following are known limitations.  Some of these are easy to lift.  Others less so...
 
-- Testing of "world" positioning mode.  I haven't done yet any testing of this except with static objects.  Expected behaviour is described in "notes on positioning" section above.  But I haven't tested this yet, so actual behaviour may be different, or worse (it might even just crash!).
-- Animation.  The A-Frame Animation component does not generate the "object3DUpdated" event, so can only be used for Instanced Meshes that use "auto" update mode.
 - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
 - Frustrum Culling is supported, but there are no automatic calculations.  To use frustrum culling, the user of this component must explicitly specify the center and radius for a bounding sphere that contains all members of the Instanced Mesh.
 - Update processing to change the properties of the instanced mesh basically works, but I am concerned we may have a small leak when we increase capacity, as I've not been able to cleanly dispose of the old Instances Meshes.
 - Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
-
-
-
-## Examples
-
-For now, see the various cases covered in /tests/ for examples of usage.
 
 
 
