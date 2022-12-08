@@ -32,25 +32,25 @@
       <a-assets>
         <script id="palette-blocks" type="text/x-nunjucks-template">
           {% set colors = [
-              "#000000", "#0000FF", "#00FF00", "#00FFFF",
-              "#FF0000", "#FF00FF", "#FFFF00", "#FFFFFF", 
-              "#C0C0C0", "#808080", "#800000", "#800080", 
-              "#808000", "#FFC0CB", "#000080", "#008080", 
-              "#008000", "#00FF7F", "#FF0080", "#FF7F00", 
-              "#FFFF7F", "#8080FF", "#7FFF00", "#7F00FF",
-              "#FF7FFF", "#00007F", "#007FFF", "#7F0000", 
-              "#7F7F7F", "#FF8080", "#80FF80", "#80FFFF", 
-              "#FF80FF", "#7F3F00", "#7F7FFF", "#3F7F00", 
-              "#3F7FFF", "#7F003F", "#7F7F3F", "#003F7F", 
-              "#3F007F", "#3F7F7F", "#007F3F", "#7F3F3F", 
-              "#3F3F7F", "#3F3F3F", "#000000", "#FFFFFF"
+            "#9f5f5f", "#bf3f3f", "#df1f1f", "#ff0000",
+            "#9f7f5f", "#bf7f3f", "#df7f1f", "#ff7f00",
+            "#9f9f5f", "#bfbf3f", "#dfdf1f", "#feff00",
+            "#7f9f5f", "#7fbf3f", "#7fdf1f", "#7fff00",
+            "#5f9f5f", "#3fbf3f", "#1fdf1f", "#00ff00",
+            "#5f9f7f", "#3fbf7f", "#1fdf7f", "#00ff7f",
+            "#5f9f9f", "#3fbfbf", "#1fdfdf", "#00feff",
+            "#5f7f9f", "#3f7fbf", "#1f7fdf", "#007fff",
+            "#5f5f9f", "#3f3fbf", "#1f1fdf", "#0000ff",
+            "#7f5f9f", "#7f3fbf", "#7f1fdf", "#7f00ff",
+            "#9f5f9f", "#bf3fbf", "#df1fdf", "#ff00fe",
+            "#9f5f7f", "#bf3f7f", "#df1f7f", "#ff007f"
             ]
            %}
           {% for x in range(0, 12) %}
             {% for y in range(0, 4) %}
               <a-entity id="palette-{{ x }}-{{ y }}"
                         position = "{{ x - 12 / 2 }} {{ y - 4 / 2 }} 0"
-                        instanced-mesh-member="mesh:#palette-mesh; colors: {{ colors[x + 12 * y]}}">
+                        instanced-mesh-member="mesh:#palette-mesh; colors: {{ colors[x * 4 + y]}}">
                 <a-box visible="false" palette-events>
                 </a-box>
               </a-entity>
