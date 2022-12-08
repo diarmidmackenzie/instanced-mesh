@@ -1,65 +1,4 @@
-// Create a cube of blocks of given dimension
-AFRAME.registerComponent('block-stack', {
-  schema: {
-    size: {type: 'number', default: 10 }
-  },
-  init() {
-
-    const size = this.data.size
-    for (let ii = 0; ii < size; ii++) {
-      for (let jj = 0; jj < size; jj++) {
-        for (let kk = 0; kk < size; kk++) {
-          const block = document.createElement('a-entity')
-          block.id = `block-${ii}-${jj}-${kk}`
-          block.object3D.position.set(ii - size / 2, jj - size / 2, kk - size / 2)
-          block.setAttribute("instanced-mesh-member",
-                             {mesh: "#block-mesh"})
-          this.el.appendChild(block)
-
-          const raycastProxy = document.createElement('a-box')
-          raycastProxy.object3D.visible = false
-          raycastProxy.setAttribute("block-events", "")
-          
-          block.appendChild(raycastProxy)
-        }
-      }
-    }
-  }
-})
-
-// Create a rectangle of colored blocks that can be used as a palette.
-AFRAME.registerComponent('palette', {
-  schema: {
-    height: {type: 'number', default: 4 },
-    width: {type: 'number', default: 6 }
-  },
-
-  init() {
-    const width = this.data.width
-    const height = this.data.height
-    for (let ii = 0; ii < width; ii++) {
-      for (let jj = 0; jj < height; jj++) {
-        
-        const color = new THREE.Color()
-        color.setHSL(ii / width, (jj + 1) / height, 0.5)
-
-        const block = document.createElement('a-entity')
-        block.id = `palette-${ii}`
-        block.object3D.position.set(ii - width / 2, jj - height / 2, 0)
-        block.setAttribute("instanced-mesh-member",
-                            {mesh: "#palette-mesh", 
-                             colors: [`#${color.getHexString()}`]})
-        this.el.appendChild(block)
-
-        const raycastProxy = document.createElement('a-box')
-        raycastProxy.object3D.visible = false
-        raycastProxy.setAttribute("palette-events", "")
-        
-        block.appendChild(raycastProxy)
-      }
-    }
-  }
-})
+let selectedPaletteEl;
 
 // Window level click listenr.  Needed because we can't distinguish between
 // left & right clicks on the click events from cursor.
@@ -82,7 +21,7 @@ AFRAME.registerComponent('click-listener', {
 
       if (el) {
 
-        if (el.parentEl.id === "palette") return;
+        if (el.parentEl.parentEl.parentEl.id === "palette") return;
 
         const button = event.button
         if (button === 0) {
@@ -102,12 +41,10 @@ AFRAME.registerComponent('click-listener', {
   },
 
   getPaletteColors() {
-    paletteEl = document.getElementById("palette")
-    selected = paletteEl.components["palette"].selected
 
     let colors
-    if (selected) {
-      colors = selected.components["instanced-mesh-member"].colors
+    if (selectedPaletteEl) {
+      colors = selectedPaletteEl.components["instanced-mesh-member"].colors
     }
     else {
       colors = "white"
@@ -213,23 +150,22 @@ AFRAME.registerComponent('palette-events', {
   },
 
   isSelected() {
-    const selected = this.getRaycastTarget().parentEl.components['palette'].selected
-    return (selected === this.getRaycastTarget())
+    return (selectedPaletteEl === this.getRaycastTarget())
   },
 
   selectThis() {
-    const palette = this.getRaycastTarget().parentEl.components['palette']
-    if (palette.selected) {
-      palette.selected.object3D.scale.set(1, 1, 1)
-      palette.selected.emit('object3DUpdated')
+    
+    if (selectedPaletteEl) {
+      selectedPaletteEl.object3D.scale.set(1, 1, 1)
+      selectedPaletteEl.emit('object3DUpdated')
     }
 
-    if (palette.selected !== this.getRaycastTarget()) {
-      palette.selected = this.getRaycastTarget()
+    if (selectedPaletteEl !== this.getRaycastTarget()) {
+      selectedPaletteEl = this.getRaycastTarget()
       return true
     }
     else {
-      palette.selected = null
+      selectedPaletteEl = null
       return false
     }
   },
