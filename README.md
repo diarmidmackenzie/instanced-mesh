@@ -262,6 +262,11 @@ It seems to run at a slightly lower frame-rate than the [equivalent example with
 
 The templating introduces an additional `<a-entity>` layer between the scene and the elements, and that will result in additional matrix computations, and might account for some of the difference in performance.  It's not clear that this can account for all of the difference though.
 
+Templating also allows for creation of many instances of an entity with multiple sub-entities - for example many copies of this template:
+https://github.com/supermedium/superframe/blob/master/components/template/examples/basic/butterfly.template
+
+Instancing multiple versions of something like this is beyond what I think can be done at the moment.  It would require creation of an Instanced Mesh corresponding to each entity.  This is very similar to what we already do for multi-part GLTFs, and for decomposition of multi-material geometries - so probably quite straightforward to do, but beyond what's implemented currently.
+
 
 ## Design Considerations
 
