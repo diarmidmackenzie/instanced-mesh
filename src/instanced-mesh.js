@@ -289,7 +289,19 @@ AFRAME.registerComponent('instanced-mesh', {
       this.boundingSphere.center.copy(this.data.fccenter);
       this.boundingSphere.radius = this.data.fcradius;
       this.instancedMeshes.forEach(mesh => {
-        mesh.geometry.boundingSphere = this.boundingSphere;
+
+        // We mustn't overwrite the boundingSphere of a shared geometry.
+        // Doing so could have various unpredictable effects.
+        // We need a private copy of each geometry used by this Instanced Mesh.
+        // If we already have a private geometry, we can just update it
+        if (mesh.geometry.userData.instancedMeshPrivateGeometry === this) {
+          mesh.geometry.boundingSphere = this.boundingSphere;
+        }
+        else {
+          mesh.geometry = mesh.geometry.clone();
+          mesh.geometry.userData.instancedMeshPrivateGeometry = this;
+          mesh.geometry.boundingSphere = this.boundingSphere;
+        }
         mesh.frustumCulled = true;
       });
     }
