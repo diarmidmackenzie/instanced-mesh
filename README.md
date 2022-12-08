@@ -249,7 +249,19 @@ It's worth noting that using `memberMesh` is just one option here.  You could al
 
 - It would require updates to core A-Frame, as the additional properties reported by THREE.js instanced raycasting are not currently made available by the A-Frame raycaster & cursor components.
 
-  
+
+
+
+## Templating
+
+`instanced-mesh`  can be used together with templating as a way to lay out the instanced mesh members within HTML.
+
+[This example](https://diarmidmackenzie.github.io/instanced-mesh/examples/templating/) shows one of the examples re-worked to use templates in this way.
+
+It seems to run at a slightly lower frame-rate than the [equivalent example without templating](https://diarmidmackenzie.github.io/instanced-mesh/examples/coloring-blocks/), particularly when rotating the cube of blocks, and I don't yet fully understand why.  Once the templatign has laid out the HTML, it shouldn't have any further involvement.
+
+The templating introduces an additional `<a-entity>` layer between the scene and the elements, and that will result in additional matrix computations, and might account for some of the difference in performance.  It's not clear that this can account for all of the difference though.
+
 
 ## Design Considerations
 
