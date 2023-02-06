@@ -19,7 +19,7 @@ AFRAME.registerComponent('instanced-mesh', {
     this.texturesLoaded = 0;
     this.eventQueue = [];
 
-    // Bounding sphere used for frustrum culling
+    // Bounding sphere used for frustum culling
     this.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 0);
 
     // Other objects used in frame of reference calculations.
@@ -215,7 +215,7 @@ AFRAME.registerComponent('instanced-mesh', {
     }
 
     // some other details that may need to be updated on the instanced meshes...
-    this.updateFrustrumCulling();
+    this.updateFrustumCulling();
     this.updateLayers();
 
     // set the Object3D Map to point to the first instanced mesh.
@@ -278,13 +278,13 @@ AFRAME.registerComponent('instanced-mesh', {
     this.el.setObject3D('mesh', this.instancedMeshes[0]);
   },
 
-  updateFrustrumCulling: function() {
+  updateFrustumCulling: function() {
 
-    // Set up frustrum culling if configured.
+    // Set up frustum culling if configured.
     // This uses a separate "boundingSphere" object that represents the
     // maximum extent of all members of the mesh.
-    // If one is specified, we us this for frustrum culling.  If not, we don't
-    // use frustrum culling at all for this mesh.
+    // If one is specified, we us this for frustum culling.  If not, we don't
+    // use frustum culling at all for this mesh.
     if (this.data.fcradius > 0) {
       this.boundingSphere.center.copy(this.data.fccenter);
       this.boundingSphere.radius = this.data.fcradius;
