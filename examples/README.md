@@ -52,7 +52,7 @@ They may also be useful as examples to show how to use the various options.
 
 [Movement](https://diarmidmackenzie.github.io/instanced-mesh/tests/movement.html)
 
-[Frustrum Culling](https://diarmidmackenzie.github.io/instanced-mesh/tests/frustrum-culling.html)
+[Frustum Culling](https://diarmidmackenzie.github.io/instanced-mesh/tests/frustum-culling.html)
 
 [Multiple Layers](https://diarmidmackenzie.github.io/instanced-mesh/tests/multi-layer.html)
 
