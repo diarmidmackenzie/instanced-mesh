@@ -9,14 +9,14 @@
     <a-scene stats renderer="colorManagement:true">
       <a-assets>
         <img id="COLOR" src="./assets/snowball/Snow_002_COLOR.jpg">
-        <img id="DISP" src="./assets/snowball/Snow_002_DISP.jpg">
+        <img id="DISP" src="./assets/snowball/Snow_002_DISP.png">
         <img id="NORM" src="./assets/snowball/Snow_002_NORM.jpg">
         <img id="OCC" src="./assets/snowball/Snow_002_OCC.jpg">
         <img id="ROUGH" src="./assets/snowball/Snow_002_ROUGH.jpg">
 
       </a-assets>
 
-      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.2 0.2 0.2"></a-mixin>
 
     <a-entity id="rig" movement-controls>
       <a-entity id="camera" camera position="0 1.6 0" look-controls>
@@ -26,7 +26,7 @@
     <!-- wall of blocks-->
     <a-text position = "-5 4 -6" color ="black"
        value="An example with objects with multiple textures for different PBR attributes.
-              The (larger) single sphere below shows what all the spheres should look like.
+              The (larger) single snowball below shows what all the snowballs should look like.
               (but they are scaled down by 0.5)"></a-text>
     <!-- A-Frame metrial doesn't seem to offer a roughness map-->
     <a-entity id="mesh1"
@@ -43,7 +43,7 @@
                         displacementMap:#DISP;
                         normalMap:#NORM;
                         src:#COLOR"
-              position = "0 -2 -6"></a-entity>
+              position = "0 -3 -6"></a-entity>
     <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block1" position = "-1 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block2" position = "0 0 -6" mixin="shape1"></a-entity>
