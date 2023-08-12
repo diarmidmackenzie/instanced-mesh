@@ -1,9 +1,8 @@
 <html>
   <head>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@c5c5dcf/dist/aframe-extras.min.js"></script>
     <script src="../src/instanced-mesh.js"></script>
-    <script src="./framed-cell.js"></script>
     <script>
     AFRAME.registerComponent('move-up', {
 
@@ -39,7 +38,7 @@
   <body>
     <a-scene stats renderer="colorManagement:true">
     <a-asset-item id="cell"
-      src="./assets/animal-cell/scene.gltf"
+      src="./assets/animal-cell/scene.glb"
       response-type="arraybuffer" crossorigin="anonymous">
     </a-asset-item>
 
