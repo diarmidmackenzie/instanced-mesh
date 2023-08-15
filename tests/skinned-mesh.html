@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-asset-item id="triceratops"
+        src="https://cdn.aframe.io/examples/ar/models/triceratops/scene.gltf"
+        response-type="arraybuffer" crossorigin="anonymous">
+      </a-asset-item>
+
+      <a-text position = "-8 -1 -6" color ="black"
+         value="Skinned Meshes are not supported.  This page can be used to test error messages when a Skinned Mesh
+                is used for instancing."></a-text>
+
+      <a-entity id="mesh1"
+                gltf-model="#triceratops"
+                instanced-mesh></a-entity>
+
+      <a-entity id ="test-instance" instanced-mesh-member="mesh:#mesh1"></a-entity>
+</a-scene>
+
+</body>

@@ -304,7 +304,8 @@ The following are known limitations.  Some of these are easy to lift.  Others le
 - Changing the mesh that an entity belongs to without re-creating the entity -- This is not yet implemented - but not too complex.  Just requires instanced-member-mesh to remove the member from one mesh and add it to the other.
 - Frustum Culling is supported, but there are no automatic calculations.  To use frustum culling, the user of this component must explicitly specify the center and radius for a bounding sphere that contains all members of the Instanced Mesh.
 - Update processing to change the properties of the instanced mesh basically works, but I am concerned we may have a small leak when we increase capacity, as I've not been able to cleanly dispose of the old Instances Meshes.
-- Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README!
+- No support for [Skinned Meshes](https://threejs.org/docs/?q=skinnedMesh#api/en/objects/SkinnedMesh).  As of August 2023, there is no support in Three.js for instancing of Skinned Meshes, so supporting this would not be straightforward.  One approach that may be useful in some cases would be to [bake](https://stackoverflow.com/questions/51015987/three-js-bake-skeleton-transform-into-geometry) the default skeleton position into a standard Mesh.  This would lose the animation capabilities of the Skinned Mesh, but would render a static version of the Skinned Mesh correctly.
+- Others...?  There's bound to be a bunch of relevant stuff that I don't know about.  If it's not been explicitly mentioned as supported / tested, then it probably doesn't work!  Feel free to try things out.  If things work, please add tests to /tests/ and notes to this README.
 
 
 

@@ -210,8 +210,6 @@ AFRAME.registerComponent('instanced-mesh', {
       this.el.emit("original-mesh-ready")
       previousMesh.visible = false;
 
-      // set the Object3D Map to point to the first instanced mesh.
-      this.el.setObject3D('mesh', this.instancedMeshes[0]);
     }
 
     // some other details that may need to be updated on the instanced meshes...
@@ -219,7 +217,12 @@ AFRAME.registerComponent('instanced-mesh', {
     this.updateLayers();
 
     // set the Object3D Map to point to the first instanced mesh.
-    this.el.setObject3D('mesh', this.instancedMeshes[0]);
+    if (this.instancedMeshes.length > 0) {
+      this.el.setObject3D('mesh', this.instancedMeshes[0]);
+    }
+    else {
+      console.warn(`Instanced Mesh ${this.el.id} includes no component Mesh that can be rendered.`)
+    }
 
     this.meshLoaded = true;
 
@@ -349,6 +352,9 @@ AFRAME.registerComponent('instanced-mesh', {
       let material;
       let geometry;
 
+      if (node.type === "SkinnedMesh") {
+        console.warn(`Instanced Mesh ${this.el.id} includes a skinnedMesh ${node.name}.  Skinned Meshes are not supported with instancing and will not be rendered.`)
+      }
       if(node.type != "Mesh") return;
       geometry = node.geometry;
 
