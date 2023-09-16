@@ -579,6 +579,14 @@ AFRAME.registerComponent('instanced-mesh', {
 
       const gotColor = this.getColorForComponent(object3D, componentIndex, this.color)
       if (gotColor) {
+
+        // Prior to A-Frame 1.5.0, must call applyColorCorrection to cover case where
+        // colorManagement s set to true.
+        // Should not be required after 1.5.0 due to A-Frame PR 5210.
+        // https://github.com/aframevr/aframe/pull/5210
+        const renderer = this.el.sceneEl.systems.renderer
+        renderer.applyColorCorrection(this.color)
+
         mesh.setColorAt(index, this.color)
         mesh.instanceColor.needsUpdate = true;
       }
