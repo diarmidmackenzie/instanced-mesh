@@ -8,7 +8,6 @@
   <body>
     <a-scene stats renderer="colorManagement:true">
 
-
     <a-entity id="rig" movement-controls>
       <a-entity id="camera" camera position="0 1.6 0" look-controls>
       </a-entity>
@@ -17,15 +16,15 @@
     <!-- wall of blocks-->
     <a-text position = "-5 4 -6" color ="black"
        value="This should show an array of 5 columns, 3 rows.
-              Yellow, green and blue blocks
-              3 x blocks at the bottom are don't use instancing: reference comparison for colors."></a-text>
+              Uses non-primary colors, to make mistakes with incorrect color space more obvious.
+              3 x blocks at the bottom don't use instancing: reference comparison for colors."></a-text>
     <a-box id="mesh1"
               color="white"
               position = "0 0 0"
               instanced-mesh="capacity:15; drainColor: true"></a-box>
-    <a-mixin id="shape1" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: yellow"></a-mixin>
-    <a-mixin id="shape2" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: green"></a-mixin>
-    <a-mixin id="shape3" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: blue"></a-mixin>
+    <a-mixin id="shape1" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: #8DA34E"></a-mixin>
+    <a-mixin id="shape2" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: #A38D4E"></a-mixin>
+    <a-mixin id="shape3" scale="0.8 0.8 0.8" instanced-mesh-member="mesh:#mesh1; colors: #4E8DA3"></a-mixin>
 
     <a-entity id ="block0" position = "-2 0 -6" mixin="shape1"></a-entity>
     <a-entity id ="block1" position = "-1 0 -6" mixin="shape2"></a-entity>
@@ -45,9 +44,9 @@
     <a-entity id ="block13" position = "1 2 -6" mixin="shape2"></a-entity>
     <a-entity id ="block14" position = "2 2 -6" mixin="shape3"></a-entity>
 
-    <a-box id="ref1" scale="0.8 0.8 0.8" color="yellow" position = "-1 -2 -6" ></a-box>
-    <a-box id="ref1" scale="0.8 0.8 0.8" color="green" position = "0 -2 -6" ></a-box>
-    <a-box id="ref1" scale="0.8 0.8 0.8" color="blue" position = "1 -2 -6" ></a-box>
+    <a-box id="ref1" scale="0.8 0.8 0.8" color="#8DA34E" position = "-1 -2 -6" ></a-box>
+    <a-box id="ref1" scale="0.8 0.8 0.8" color="#A38D4E" position = "0 -2 -6" ></a-box>
+    <a-box id="ref1" scale="0.8 0.8 0.8" color="#4E8DA3" position = "1 -2 -6" ></a-box>
 
 </a-scene>
 
