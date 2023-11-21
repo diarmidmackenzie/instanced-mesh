@@ -1,6 +1,6 @@
 <html>
   <head>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@c5c5dcf/dist/aframe-extras.min.js"></script>
     <script src="../src/instanced-mesh.js"></script>
 
@@ -9,14 +9,14 @@
     <a-scene stats renderer="colorManagement:true">
       <a-assets>
         <img id="COLOR" src="./assets/snowball/Snow_002_COLOR.jpg">
-        <img id="DISP" src="./assets/snowball/Snow_002_DISP.jpg">
+        <img id="DISP" src="./assets/snowball/Snow_002_DISP.png">
         <img id="NORM" src="./assets/snowball/Snow_002_NORM.jpg">
         <img id="OCC" src="./assets/snowball/Snow_002_OCC.jpg">
         <img id="ROUGH" src="./assets/snowball/Snow_002_ROUGH.jpg">
 
       </a-assets>
 
-      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
+      <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.2 0.2 0.2"></a-mixin>
 
     <a-entity id="rig" movement-controls>
       <a-entity id="camera" camera position="0 1.6 0" look-controls>

@@ -256,7 +256,9 @@ AFRAME.registerComponent('instanced-mesh', {
       var newMesh = new THREE.InstancedMesh(node.geometry,
                                             node.material,
                                             this.data.capacity);
+      newMesh.count = this.members;
       newMeshes.push(newMesh);
+      
       for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
         oldMesh.getMatrixAt(ii, this.matrix)
         newMesh.setMatrixAt(ii, this.matrix);
