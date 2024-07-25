@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@c5c5dcf/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <script src="./framed-block.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="text-overlay">
+      <p>Empty instanced mesh.</p>
+      <p>No objects should be visible, amd draw calls should be zero.</p>
+    </div>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/blob/main/tests/empty-instanced-mesh.html">
+      view code
+    </a>
+    <a-scene stats renderer="colorManagement:true">
+
+      <a-entity id="rig" movement-controls>
+        <a-entity id="camera" camera position="0 1.6 3" look-controls>
+        </a-entity>
+      </a-entity>
+
+      <a-entity id="mesh1" framed-block="facecolor: white; framecolor: black" instanced-mesh="capacity:500"></a-entity>
+
+</a-scene>
+
+</body>
