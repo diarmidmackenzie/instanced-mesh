@@ -184,13 +184,16 @@ AFRAME.registerComponent('instanced-mesh', {
       this.componentOriginalColors = [];
 
       this.meshNodes.forEach((node, index) => {
-        var instancedMesh = new THREE.InstancedMesh(node.geometry,
-                                                    node.material,
-                                                    this.data.capacity);
+        const instancedMesh = new THREE.InstancedMesh(node.geometry,
+                                                      node.material,
+                                                      this.data.capacity);
+        // mesh doesn't have any members yet
+        instancedMesh.count = 0
 
         // For each instanced mesh required, we store off both the instanced mesh
         // itself. and the transform matrix for the component of the model that
         // it represents.
+        
         this.instancedMeshes.push(instancedMesh)
         this.componentMatrices.push(node.matrixWorld)
         this.componentMaterialIndices.push(node.materialIndex)
