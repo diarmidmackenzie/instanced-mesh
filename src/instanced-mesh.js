@@ -310,6 +310,14 @@ AFRAME.registerComponent('instanced-mesh', {
           mesh.geometry.userData.instancedMeshPrivateGeometry = this;
           mesh.geometry.boundingSphere = this.boundingSphere;
         }
+
+        // Following this PR (mrdoob/three.js#25591), we also need to update the
+        // boundingSphere property on the instancedMesh, which is now used for
+        // dynamic frustum culling on the instancedMesh.
+        // No support here for dynamic frustum culling yet, just maintaining
+        // pre-existing static functionality.
+        mesh.boundingSphere = this.boundingSphere
+        
         mesh.frustumCulled = true;
       });
     }
