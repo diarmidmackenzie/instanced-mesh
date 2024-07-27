@@ -1,0 +1,53 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@c5c5dcf/dist/aframe-extras.min.js"></script>
+    <script src="../src/instanced-mesh.js"></script>
+    <script src="./framed-block.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+    <script>
+      AFRAME.registerComponent('delayed-members', {
+        init() {
+          setTimeout(() => {
+            this.el.insertAdjacentHTML('afterbegin', 
+              `
+                <a-entity id ="block2" position = "0 0 -6" mixin="shape1"></a-entity>
+              `
+            )
+          }, 100)
+        }
+      })
+    </script>
+  </head>
+  <body>
+    <div class="text-overlay">
+      <p>Test for frustum culling bug in A-Frame 1.5.0 - see issue #42.</p>
+      <p>Mesh is initially empty, then a member is added.  Frustum culling enabled.</p>
+      <p>Yellow cube should be visible, but disappear when yellow sphere moves out of view.</p>
+    </div>
+    <a class="code-link"
+      target="_blank"
+      href="https://github.com/diarmidmackenzie/instanced-mesh/blob/main/tests/frustum-culling-initially-empty.html">
+      view code
+    </a>
+    <a-scene stats renderer="colorManagement:true">
+
+    <a-mixin id="shape1" instanced-mesh-member="mesh:#mesh1" scale = "0.5 0.5 0.5"></a-mixin>
+
+    <a-entity id="rig" movement-controls>
+      <a-entity id="camera" camera position="0 1.6 0" look-controls>
+      </a-entity>
+    </a-entity>
+
+    <!-- wall of blocks-->
+    <a-entity id="mesh1"
+              framed-block="facecolor: yellow; framecolor: black"
+              position = "0 0 0"
+              instanced-mesh="capacity:15; fcradius: 1; fccenter:6 0 -6"
+              delayed-members>
+      <a-sphere position="6 0 -6" radius="1" material="color:yellow;transparent:true;opacity:0.3">
+      </a-sphere>
+    </a-entity>
+</a-scene>
+
+</body>
