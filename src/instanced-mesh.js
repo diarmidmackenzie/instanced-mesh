@@ -353,7 +353,7 @@ AFRAME.registerComponent('instanced-mesh', {
   // - material(s) of each component
   // - transforms of each component.
   constructMeshNodes: function(originalMesh) {
-    meshNodes  = [];
+    const meshNodes = [];
 
     originalMesh.updateMatrixWorld()
     this.inverseMatrix.copy(originalMesh.matrixWorld)
