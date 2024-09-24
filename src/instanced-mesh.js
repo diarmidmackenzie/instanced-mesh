@@ -108,10 +108,10 @@ AFRAME.registerComponent('instanced-mesh', {
     // object *after* instanced-mesh.  This component gets initialized first but there
     // is no "model-loaded" event.  What's the equivalent?
     // For now, solution is to always specify instanced-mesh *after* geometry.
-    var previousMesh = this.el.getObject3D('mesh')
+    const previousMesh = this.el.getObject3D('mesh')
     if (!previousMesh) {
         this.el.addEventListener('model-loaded', e => {
-          this.update.call(this, this.data)
+          this.update(this.data)
         })
         return;
     }
@@ -131,7 +131,7 @@ AFRAME.registerComponent('instanced-mesh', {
           this.texturesLoaded++;
           if (this.texturesToLoad === this.texturesLoaded) {
             // All textures loaded - proceed.
-            this.update.call(this, this.data)
+            this.update(this.data)
           }
         })
         return;
@@ -252,22 +252,22 @@ AFRAME.registerComponent('instanced-mesh', {
 
   increaseInstancedMeshCapacity: function() {
 
-    newMeshes = [];
+    const newMeshes = [];
 
     this.meshNodes.forEach((node, index) => {
       const oldMesh = this.instancedMeshes[index];
-      var newMesh = new THREE.InstancedMesh(node.geometry,
+      const newMesh = new THREE.InstancedMesh(node.geometry,
                                             node.material,
                                             this.data.capacity);
       newMesh.count = this.members;
       newMeshes.push(newMesh);
       
-      for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
+      for (let ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii++) {
         oldMesh.getMatrixAt(ii, this.matrix)
         newMesh.setMatrixAt(ii, this.matrix);
       }
       if (oldMesh.instanceColor) {
-        for (ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii ++ ) {
+        for (let ii = 0; ii < Math.min(oldMesh.count, this.data.capacity); ii++) {
           oldMesh.getColorAt(ii, this.color)
           newMesh.setColorAt(ii, this.color);
         }
@@ -339,7 +339,7 @@ AFRAME.registerComponent('instanced-mesh', {
       });
 
       // Apply
-      for (let num of layerNumbers) {
+      for (const num of layerNumbers) {
         this.instancedMeshes.forEach(mesh => {
           mesh.layers.enable(num);
         });
@@ -363,13 +363,12 @@ AFRAME.registerComponent('instanced-mesh', {
     originalMesh.traverse((node) => {
 
       let material;
-      let geometry;
 
       if (node.type === "SkinnedMesh") {
         console.warn(`Instanced Mesh ${this.el.id} includes a skinnedMesh ${node.name}.  Skinned Meshes are not supported with instancing and will not be rendered.`)
       }
-      if(node.type != "Mesh") return;
-      geometry = node.geometry;
+      if(node.type !== "Mesh") return;
+      const geometry = node.geometry;
 
       if (this.data.decompose && geometry.groups && geometry.groups.length > 1) {
         // geometry consists of multiple groups, to decompose.
@@ -515,7 +514,7 @@ AFRAME.registerComponent('instanced-mesh', {
     }
 
     const member = event.detail.member;
-    var index;
+    let index;
 
     // First, choose the index for the new member.
     // 2 possibilities...
@@ -524,7 +523,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
       // Grab the index, and remove this index from the list of pending deletions.
       const memberToRemove = this.membersToRemove[0];
-      index = this.orderedMembersList.findIndex(x => (x == memberToRemove));
+      index = this.orderedMembersList.findIndex(x => (x === memberToRemove));
 
       this.membersToRemove.splice(0, 1);
       this.orderedMembersList[index] = member;
@@ -580,7 +579,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
         mesh.getMatrixAt(index, this.debugMatrix);
 
-        var position = this.position;
+        const position = this.position;
         position.setFromMatrixPosition(this.debugMatrix);
         console.log(`Old position:${position.x} ${position.y} ${position.z}`);
         position.setFromMatrixPosition(object3D.matrix);
@@ -619,7 +618,7 @@ AFRAME.registerComponent('instanced-mesh', {
     const colorIndex = this.componentMaterialIndices[componentIndex]
 
     // ?. operator guards for race conditions around deletion of members.
-    let colors = member.el?.components['instanced-mesh-member']?.data.colors
+    const colors = member.el?.components['instanced-mesh-member']?.data.colors
 
     if (colors && colors.length > colorIndex) {
       // member has specified a color for the relevant index.
@@ -728,17 +727,17 @@ AFRAME.registerComponent('instanced-mesh', {
       // We have members to Remove.
       // We need to iterate through all members, as those that aren't removed
       // still need to be shuffled up.
-      var removed = 0;
+      let removed = 0;
 
 
-      for (var ii = 0; ii < this.members; ii++) {
+      for (let ii = 0; ii < this.members; ii++) {
         // Check whether this one is to be removed (taking into account
         // index shuffling that has already taken place...)
         // If so, increment the amount we are shuffling up by, which will
         // lead to this entry being overwritten.
 
-        var matrixCursor = ii;
-        var membersCursor = ii - removed;
+        const matrixCursor = ii;
+        const membersCursor = ii - removed;
 
         if (this.membersToRemove.includes(this.orderedMembersList[membersCursor])) {
           //console.log(`Item to remove: ${this.orderedMembersList[membersCursor]} at position ${matrixCursor}`)
@@ -811,12 +810,12 @@ AFRAME.registerComponent('instanced-mesh', {
         if (object) {
           this.updateMatricesFromMemberObject(object, ii);
         }
-      }; 
+      }
     }
     else {
       this.membersToUpdate.forEach((member) => {
         const index = this.orderedMembersList.findIndex(x => (x === member));
-        if (index == -1) {
+        if (index === -1) {
           console.error(`Member ${member.id} not found for modification`)
         }
         this.updateMatricesFromMemberObject(member.object3D, index);
