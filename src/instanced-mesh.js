@@ -367,7 +367,7 @@ AFRAME.registerComponent('instanced-mesh', {
       if (node.type === "SkinnedMesh") {
         console.warn(`Instanced Mesh ${this.el.id} includes a skinnedMesh ${node.name}.  Skinned Meshes are not supported with instancing and will not be rendered.`)
       }
-      if(node.type != "Mesh") return;
+      if(node.type !== "Mesh") return;
       const geometry = node.geometry;
 
       if (this.data.decompose && geometry.groups && geometry.groups.length > 1) {
@@ -523,7 +523,7 @@ AFRAME.registerComponent('instanced-mesh', {
 
       // Grab the index, and remove this index from the list of pending deletions.
       const memberToRemove = this.membersToRemove[0];
-      index = this.orderedMembersList.findIndex(x => (x == memberToRemove));
+      index = this.orderedMembersList.findIndex(x => (x === memberToRemove));
 
       this.membersToRemove.splice(0, 1);
       this.orderedMembersList[index] = member;
@@ -815,7 +815,7 @@ AFRAME.registerComponent('instanced-mesh', {
     else {
       this.membersToUpdate.forEach((member) => {
         const index = this.orderedMembersList.findIndex(x => (x === member));
-        if (index == -1) {
+        if (index === -1) {
           console.error(`Member ${member.id} not found for modification`)
         }
         this.updateMatricesFromMemberObject(member.object3D, index);
