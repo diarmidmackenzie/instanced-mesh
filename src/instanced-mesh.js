@@ -111,7 +111,7 @@ AFRAME.registerComponent('instanced-mesh', {
     const previousMesh = this.el.getObject3D('mesh')
     if (!previousMesh) {
         this.el.addEventListener('model-loaded', e => {
-          this.update.call(this, this.data)
+          this.update(this.data)
         })
         return;
     }
@@ -131,7 +131,7 @@ AFRAME.registerComponent('instanced-mesh', {
           this.texturesLoaded++;
           if (this.texturesToLoad === this.texturesLoaded) {
             // All textures loaded - proceed.
-            this.update.call(this, this.data)
+            this.update(this.data)
           }
         })
         return;
