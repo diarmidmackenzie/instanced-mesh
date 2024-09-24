@@ -810,7 +810,7 @@ AFRAME.registerComponent('instanced-mesh', {
         if (object) {
           this.updateMatricesFromMemberObject(object, ii);
         }
-      }; 
+      }
     }
     else {
       this.membersToUpdate.forEach((member) => {
