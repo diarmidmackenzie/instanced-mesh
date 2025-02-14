@@ -1,3 +1,4 @@
+/* global AFRAME THREE */
 AFRAME.registerComponent('instanced-mesh', {
   schema: {
       capacity:   {type: 'number', default: 100},
@@ -237,7 +238,6 @@ AFRAME.registerComponent('instanced-mesh', {
 
     const material = this.el.components.material
     const shader = material.shader
-    const textures = shader.materialSrcs
 
     // start with materialSrcs
     this.texturesToLoad = Object.keys(shader.materialSrcs).length;
@@ -362,8 +362,6 @@ AFRAME.registerComponent('instanced-mesh', {
 
     originalMesh.traverse((node) => {
 
-      let material;
-
       if (node.type === "SkinnedMesh") {
         console.warn(`Instanced Mesh ${this.el.id} includes a skinnedMesh ${node.name}.  Skinned Meshes are not supported with instancing and will not be rendered.`)
       }
@@ -439,7 +437,6 @@ AFRAME.registerComponent('instanced-mesh', {
   cloneMaterial(material, index) {
 
     let newMaterial
-    let color
 
     if (Array.isArray(material)) {
 
