@@ -1,6 +1,6 @@
 {
   "name": "aframe-instanced-mesh",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Use three.js InstancedMesh object within A-Frame",
   "main": "src/instanced-mesh.js",
   "directories": {
