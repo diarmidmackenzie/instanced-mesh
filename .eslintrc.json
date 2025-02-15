@@ -1,0 +1,30 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "standard"
+  ],
+  "rules": {
+    "key-spacing": "off",
+    "object-curly-spacing": "off",
+    "no-trailing-spaces": "off",
+    "brace-style": "off",
+    "padded-blocks": "off",
+    "spaced-comment": "off",
+    "object-curly-newline": "off",
+    "space-in-parens": "off",
+    "no-inner-declarations": "off",
+    "keyword-spacing": "off",
+    "no-multiple-empty-lines": "off",
+    "quote-props": "off",
+    "indent": "off",
+    "quotes": "off",
+    "comma-dangle": "off",
+    "generator-star-spacing": "off",
+    "multiline-ternary": "off",
+    "object-shorthand": "off",
+    "no-prototype-builtins": "off",
+    "no-useless-return": "off",
+    "semi": "off",
+    "space-before-function-paren": "off"
+  }
+}
